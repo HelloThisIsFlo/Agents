@@ -2,7 +2,7 @@ from agno.agent import Agent
 from agno.document.chunking.document import DocumentChunking
 from agno.document.chunking.semantic import SemanticChunking
 from agno.knowledge.text import TextKnowledgeBase
-from agno.models.openai import OpenAIChat
+from agno.models.openai import OpenAIChat, OpenAILike
 from agno.tools.duckduckgo import DuckDuckGoTools
 from agno.vectordb.pgvector import PgVector
 
@@ -23,11 +23,25 @@ knowledge_base = TextKnowledgeBase(
     formats=[".md"],
 )
 
+
+def get_model():
+    local = True
+    if local:
+        return OpenAILike(
+            id="qwen2.5-7b-instruct-1m@q8_0",
+            api_key="not-used",
+            base_url="http://127.0.0.1:1234/v1",
+        )
+    else:
+        # return OpenAIChat(id="gpt-4o-mini")
+        return OpenAIChat(id="gpt-4o")
+
+
 if RELOAD_KNOWLEDGE_BASE:
     knowledge_base.load(recreate=True, upsert=True)
 
 agent = Agent(
-    model=OpenAIChat(id="gpt-4o"),
+    model=get_model(),
     knowledge=knowledge_base,
     # Add a tool to read chat history.
     search_knowledge=True,
@@ -56,5 +70,6 @@ agent = Agent(
     """,
     # debug_mode=True,
 )
+
 
 agent.cli_app(stream=True)
