@@ -30,6 +30,7 @@ def get_model():
     if local:
         return OpenAILike(
             id="qwen2.5-7b-instruct-1m@q8_0",
+            # id="qwen2.5-7b-instruct-1m@q4_k_m",
             api_key="not-used",
             base_url="http://127.0.0.1:1234/v1",
         )
@@ -59,7 +60,11 @@ class HandoffExperiment(Workflow):
             name="Triage Agent",
             model=get_model(),
             description="""
-            You are a triage agent. You handoff queries to either agent A or agent B. Do not let the users you're handing off to another agent.
+            You are a triage agent. 
+            You handoff queries to either agent A or agent B. 
+            However, if the user doesn't specifically request to talk to agent A or agent B, you should handle the query yourself.
+            Of course "A" refers to "Agent A" and "B" refers to "Agent B".
+            Do not let the users you're handing off to another agent.
             """,
             tools=[self.handoff_to_specialized_agents],
             storage=get_storage("triage"),
@@ -72,7 +77,12 @@ class HandoffExperiment(Workflow):
             name="Agent A",
             model=get_model(),
             description="""
-            You are agent A, also referred to as simply 'A'. You start all your answers with "I am agent A: ". Do not greet the user upon first talking to them.
+            You are agent A, also referred to as simply 'A'. 
+            """,
+            instructions="""
+            - You start all your answers with "I am agent A: ". 
+            - You only hand off to the triage agent IF the user specifically asks for it, or if they ask to speak to another agent that's not you.
+            - Do not greet the user upon first talking to them.
             """,
             tools=[self.handoff_back_to_triage],
             storage=get_storage("agent_a"),
@@ -85,7 +95,12 @@ class HandoffExperiment(Workflow):
             name="Agent B",
             model=get_model(),
             description="""
-            You are agent B, also referred to as simply 'B'. You start all your answers with "I am agent B: ". Do not greet the user upon first talking to them.
+            You are agent B, also referred to as simply 'B'. 
+            """,
+            instructions="""
+            - You start all your answers with "I am agent B: ". 
+            - You only hand off to the triage agent IF the user specifically asks for it, or if they ask to speak to another agent that's not you.
+            - Do not greet the user upon first talking to them.
             """,
             tools=[self.handoff_back_to_triage],
             storage=get_storage("agent_b"),
@@ -130,23 +145,11 @@ class HandoffExperiment(Workflow):
         """
         return self._handoff_to_agents("triage")
 
-    def _run_current_agent(self, user_message: str) -> Iterator[RunResponse]:
-        current_agent = self.session_state["current_agent"]
-        LOGGER.info(f"Running agent: {current_agent}")
-
-        if current_agent == "triage":
-            yield from self._run_triage(user_message)
-        elif current_agent == "agent_a":
-            yield from self._run_agent_a(user_message)
-        elif current_agent == "agent_b":
-            yield from self._run_agent_b(user_message)
-        else:
-            raise ValueError(f"Unknown agent: {current_agent}")
-
     def run(self, user_message: str) -> Iterator[RunResponse]:
         self.session_state.setdefault("current_agent", "triage")
         self.session_state.setdefault("previous_agent", "triage")
         self.session_state.setdefault("just_handed_off", False)
+        self.session_state.setdefault("summary", None)
 
         # Run the initial agent
         yield from self._run_current_agent(user_message)
@@ -159,26 +162,29 @@ class HandoffExperiment(Workflow):
 
             # yield current_agent.create_run_response(content="\n\n")
             summary = previous_agent.memory.update_summary()
-            LOGGER.info(f"Summary of previous conversation: {summary}")
-            yield from self._run_current_agent(
-                f"""
-                You've been handed off this conversation between the user and {current_agent.name}. 
-                Please consult the summary and take it from there.
-                
-                <summary>
-                {summary}
-                </summary>
-                """
+            LOGGER.info(
+                f"Message Pairs: {previous_agent.memory.get_message_pairs(assistant_role=['assistant', 'DEBUG'])}"
             )
+            LOGGER.info(f"Summary of previous conversation: {summary}")
+            self.session_state["summary"] = summary
 
-    def _run_triage(self, message: str) -> Iterator[RunResponse]:
-        yield from self.triage.run(message, stream=True)
+            current_agent.additional_context = f"""
+            You've been handed off this conversation from {previous_agent.name}.
+            Please consult the summary before answering.
+            Don't answer the user's question if it's already been answered.
+            
+            <summary>
+            {summary}
+            </summary>
+            """
+            LOGGER.info(f"Running agent: {current_agent.name}")
+            # yield current_agent.get_user_message("\n\n")
+            yield from current_agent.run(user_message, stream=True)
 
-    def _run_agent_a(self, message: str) -> Iterator[RunResponse]:
-        yield from self.agent_a.run(message, stream=True)
-
-    def _run_agent_b(self, message: str) -> Iterator[RunResponse]:
-        yield from self.agent_b.run(message, stream=True)
+    def _run_current_agent(self, user_message: str) -> Iterator[RunResponse]:
+        current_agent = self.agents[self.session_state["current_agent"]]
+        LOGGER.info(f"Running agent: {current_agent.name}")
+        yield from current_agent.run(user_message, stream=True)
 
 
 def human_input_generator():
@@ -194,8 +200,16 @@ USE_CASES = {
     "First A then B": [
         "I want to talk to A",
         "Who are you?",
-        "I want to talk to B",
+        "What is the capital of France?",
+        "I want to talk to B, please hand off",
         "Who are you?",
+        "I want to talk to A again, please hand off",
+        "What did we talk about?",
+    ],
+    "Question for Triage, and then handoff to A": [
+        "What is the capital of France?",
+        "I want to talk to A",
+        "What's the best way to cook a steak?",
     ],
 }
 
@@ -205,6 +219,7 @@ def run_in_cli():
     # use_case = "onboarding"
     # use_case = "jailbreak_attempt"
     use_case = "human"
+    # use_case = "Question for Triage, and then handoff to A"
     use_case = "First A then B"
     for msg in USE_CASES[use_case]:
         print(
