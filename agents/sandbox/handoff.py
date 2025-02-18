@@ -59,10 +59,10 @@ class HandoffExperiment(Workflow):
             name="Triage Agent",
             model=get_model(),
             description="""
-            You are a triage agent. You handoff queries to either agent A or agent B.
+            You are a triage agent. You handoff queries to either agent A or agent B. Do not let the users you're handing off to another agent.
             """,
             tools=[self.handoff_to_specialized_agents],
-            storage=get_storage("shared"),
+            storage=get_storage("triage"),
             add_history_to_messages=True,
             num_history_responses=10,
             debug_mode=DEBUG,
@@ -72,10 +72,10 @@ class HandoffExperiment(Workflow):
             name="Agent A",
             model=get_model(),
             description="""
-            You are agent A. You start all your answers with "I am agent A: ".
+            You are agent A, also referred to as simply 'A'. You start all your answers with "I am agent A: ". Do not greet the user upon first talking to them.
             """,
             tools=[self.handoff_back_to_triage],
-            storage=get_storage("shared"),
+            storage=get_storage("agent_a"),
             add_history_to_messages=True,
             num_history_responses=10,
             debug_mode=DEBUG,
@@ -85,10 +85,10 @@ class HandoffExperiment(Workflow):
             name="Agent B",
             model=get_model(),
             description="""
-            You are agent B. You start all your answers with "I am agent B: ".
+            You are agent B, also referred to as simply 'B'. You start all your answers with "I am agent B: ". Do not greet the user upon first talking to them.
             """,
             tools=[self.handoff_back_to_triage],
-            storage=get_storage("shared"),
+            storage=get_storage("agent_b"),
             add_history_to_messages=True,
             num_history_responses=10,
             debug_mode=DEBUG,
@@ -110,6 +110,7 @@ class HandoffExperiment(Workflow):
 
         self.session_state["previous_agent"] = self.session_state["current_agent"]
         self.session_state["current_agent"] = agent_name
+        LOGGER.info(f"Handing off to {agent_name}")
         return f"Handed off to {agent_name}"
 
     def handoff_to_specialized_agents(self, agent_name):
@@ -151,11 +152,24 @@ class HandoffExperiment(Workflow):
         yield from self._run_current_agent(user_message)
 
         # If there was a handoff, run the new agent
-        if self.session_state["just_handed_off"]:
+        while self.session_state["just_handed_off"]:
             self.session_state["just_handed_off"] = False
             previous_agent: Agent = self.agents[self.session_state["previous_agent"]]
+            current_agent: Agent = self.agents[self.session_state["current_agent"]]
 
-            yield from self._run_current_agent(user_message)
+            # yield current_agent.create_run_response(content="\n\n")
+            summary = previous_agent.memory.update_summary()
+            LOGGER.info(f"Summary of previous conversation: {summary}")
+            yield from self._run_current_agent(
+                f"""
+                You've been handed off this conversation between the user and {current_agent.name}. 
+                Please consult the summary and take it from there.
+                
+                <summary>
+                {summary}
+                </summary>
+                """
+            )
 
     def _run_triage(self, message: str) -> Iterator[RunResponse]:
         yield from self.triage.run(message, stream=True)
@@ -179,7 +193,9 @@ USE_CASES = {
     "human": human_input_generator(),
     "First A then B": [
         "I want to talk to A",
+        "Who are you?",
         "I want to talk to B",
+        "Who are you?",
     ],
 }
 
