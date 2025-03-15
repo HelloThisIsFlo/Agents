@@ -52,7 +52,7 @@ requires-dist = [
 
 [[package]]
 name = "agno"
-version = "1.1.11"
+version = "1.1.13"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docstring-parser" },
@@ -68,9 +68,9 @@ dependencies = [
     { name = "typer" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8b/9d/8120abe3af7276e905f3af6192b1bd98fbf05a0b778de4338ff1b396db56/agno-1.1.11.tar.gz", hash = "sha256:6944911b2724f385f7df0e5ec67da1fe3fb4549638ece9a149cf66b1644a3199", size = 373524 }
+sdist = { url = "https://files.pythonhosted.org/packages/42/67/d89275919c23a03a939abcb92bbd008318b11000a5193681793ba5fffeb0/agno-1.1.13.tar.gz", hash = "sha256:62a0b8e620b11f3cfcf7e16c143ccfd2f73061b80f73d3032a3964f2272aacd7", size = 378853 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1f/a6/dcdf3ffde58a2f7a68b14ab63b76b55d6851b04ef1550f9a25f2ded23255/agno-1.1.11-py3-none-any.whl", hash = "sha256:076c11128fc22f7d9cdbf62702937783b99b7125d769e01dd8e24c5620859bce", size = 513371 },
+    { url = "https://files.pythonhosted.org/packages/4f/c3/2fcf7725c2242e7073292459605fb03e134386d675b48ebe56c154ef041d/agno-1.1.13-py3-none-any.whl", hash = "sha256:a96688f330578801eda22e82e072eb2d9be596138f5b80383e25778159ede143", size = 518714 },
 ]
 
 [[package]]
@@ -339,11 +339,11 @@ wheels = [
 
 [[package]]
 name = "filelock"
-version = "3.17.0"
+version = "3.18.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/dc/9c/0b15fb47b464e1b663b1acd1253a062aa5feecb07d4e597daea542ebd2b5/filelock-3.17.0.tar.gz", hash = "sha256:ee4e77401ef576ebb38cd7f13b9b28893194acc20a8e68e18730ba9c0e54660e", size = 18027 }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/10/c23352565a6544bdc5353e0b15fc1c563352101f30e24bf500207a54df9a/filelock-3.18.0.tar.gz", hash = "sha256:adbc88eabb99d2fec8c9c1b229b171f18afa655400173ddc653d5d01501fb9f2", size = 18075 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/89/ec/00d68c4ddfedfe64159999e5f8a98fb8442729a63e2077eb9dcd89623d27/filelock-3.17.0-py3-none-any.whl", hash = "sha256:533dc2f7ba78dc2f0f531fc6c4940addf7b70a481e269a5a3b93be94ffbe8338", size = 16164 },
+    { url = "https://files.pythonhosted.org/packages/4d/36/2a115987e2d8c300a974597416d9de88f2444426de9571f4b59b2cca3acc/filelock-3.18.0-py3-none-any.whl", hash = "sha256:c401f4f8377c4464e6db25fff06205fd89bdd83b65eb0488ed1b160f780e21de", size = 16215 },
 ]
 
 [[package]]
