@@ -1,9 +1,9 @@
 import uuid
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, List, Tuple, Optional
 
 from agno.agent import Agent
-from agno.models.openai import OpenAIChat, OpenAILike
+from agno.models.message import Message
 from agno.playground import serve_playground_app, Playground
 from agno.storage.agent.sqlite import SqliteAgentStorage
 from agno.storage.workflow.sqlite import SqliteWorkflowStorage
@@ -15,6 +15,8 @@ from rich import print
 from rich.box import HEAVY
 from rich.panel import Panel
 
+from agents.common import get_model
+
 LOGGER = get_logger(__name__)
 
 load_dotenv()
@@ -25,18 +27,37 @@ SQLITE_DB = str(SCRIPT_DIR / "tmp/agent_storage.db")
 DEBUG = False
 
 
-def get_model():
-    local = False
-    if local:
-        return OpenAILike(
-            id="qwen2.5-7b-instruct-1m@q8_0",
-            # id="qwen2.5-7b-instruct-1m@q4_k_m",
-            api_key="not-used",
-            base_url="http://127.0.0.1:1234/v1",
-        )
-    else:
-        return OpenAIChat(id="gpt-4o-mini")
-        # return OpenAIChat(id="gpt-4o")
+def patched_get_message_pairs(
+    self, user_role: str = "user", assistant_role: Optional[List[str]] = None
+) -> List[Tuple[Message, Message]]:
+    """Returns a list of tuples of (user message, assistant response)."""
+
+    if assistant_role is None:
+        assistant_role = ["assistant", "model", "CHATBOT"]
+
+    runs_as_message_pairs: List[Tuple[Message, Message]] = []
+    for run in self.runs:
+        if run.response and run.response.messages:
+            user_messages_from_run = None
+            assistant_messages_from_run = None
+
+            # Start from the END <- HOTFIX to look for the user message
+            for message in run.response.messages[::-1]:
+                if message.role == user_role:
+                    user_messages_from_run = message
+                    break
+
+            # Start from the end to look for the assistant response
+            for message in run.response.messages[::-1]:
+                if message.role in assistant_role:
+                    assistant_messages_from_run = message
+                    break
+
+            if user_messages_from_run and assistant_messages_from_run:
+                runs_as_message_pairs.append(
+                    (user_messages_from_run, assistant_messages_from_run)
+                )
+    return runs_as_message_pairs
 
 
 def get_storage(agent_name: str, workflow=False):
@@ -64,8 +85,11 @@ class HandoffExperiment(Workflow):
             You handoff queries to either agent A or agent B. 
             However, if the user doesn't specifically request to talk to agent A or agent B, you should handle the query yourself.
             Of course "A" refers to "Agent A" and "B" refers to "Agent B".
-            Do not let the users you're handing off to another agent.
+            Do not let the users know you're handing off to another agent, do it silently.
             """,
+            instructions=[
+                "You start all your answers with 'Triage: '",
+            ],
             tools=[self.handoff_to_specialized_agents],
             storage=get_storage("triage"),
             add_history_to_messages=True,
@@ -79,11 +103,12 @@ class HandoffExperiment(Workflow):
             description="""
             You are agent A, also referred to as simply 'A'. 
             """,
-            instructions="""
-            - You start all your answers with "I am agent A: ". 
-            - You only hand off to the triage agent IF the user specifically asks for it, or if they ask to speak to another agent that's not you.
-            - Do not greet the user upon first talking to them.
-            """,
+            instructions=[
+                "You start all your answers with 'Agent A: '",
+                "You only hand off to the triage agent IF the user specifically asks for it, or if they ask to speak to another agent that's not you.",
+                "Do not greet the user upon first talking to them",
+                "Do not let the users know you're handing off to another agent, do it silently.",
+            ],
             tools=[self.handoff_back_to_triage],
             storage=get_storage("agent_a"),
             add_history_to_messages=True,
@@ -97,11 +122,12 @@ class HandoffExperiment(Workflow):
             description="""
             You are agent B, also referred to as simply 'B'. 
             """,
-            instructions="""
-            - You start all your answers with "I am agent B: ". 
-            - You only hand off to the triage agent IF the user specifically asks for it, or if they ask to speak to another agent that's not you.
-            - Do not greet the user upon first talking to them.
-            """,
+            instructions=[
+                "You start all your answers with 'Agent B: '",
+                "You only hand off to the triage agent IF the user specifically asks for it, or if they ask to speak to another agent that's not you.",
+                "Do not greet the user upon first talking to them",
+                "Do not let the users know you're handing off to another agent, do it silently.",
+            ],
             tools=[self.handoff_back_to_triage],
             storage=get_storage("agent_b"),
             add_history_to_messages=True,
@@ -115,6 +141,11 @@ class HandoffExperiment(Workflow):
             "agent_b": self.agent_b,
         }
 
+        # TMP: Hotfix
+        for agent in self.agents.values():
+            agent.initialize_agent()
+            agent.memory.__class__.get_message_pairs = patched_get_message_pairs
+
     def _handoff_to_agents(self, agent_name):
         if agent_name not in ["agent_a", "agent_b", "triage"]:
             return "Error: Invalid agent name. The agent name must be 'agent_a' or 'agent_b'."
@@ -126,7 +157,9 @@ class HandoffExperiment(Workflow):
         self.session_state["previous_agent"] = self.session_state["current_agent"]
         self.session_state["current_agent"] = agent_name
         LOGGER.info(f"Handing off to {agent_name}")
-        return f"Handed off to {agent_name}"
+        return (
+            f"The conversation will be handed over to {agent_name}. No need to respond!"
+        )
 
     def handoff_to_specialized_agents(self, agent_name):
         """
@@ -152,7 +185,10 @@ class HandoffExperiment(Workflow):
         self.session_state.setdefault("summary", None)
 
         # Run the initial agent
-        yield from self._run_current_agent(user_message)
+        resp = self._run_current_agent(user_message)
+        if not self.session_state["just_handed_off"]:
+            print("Not handed off")
+            yield resp
 
         # If there was a handoff, run the new agent
         while self.session_state["just_handed_off"]:
@@ -162,29 +198,36 @@ class HandoffExperiment(Workflow):
 
             # yield current_agent.create_run_response(content="\n\n")
             summary = previous_agent.memory.update_summary()
-            LOGGER.info(
-                f"Message Pairs: {previous_agent.memory.get_message_pairs(assistant_role=['assistant', 'DEBUG'])}"
-            )
+            # LOGGER.info(
+            #     f"Message Pairs: {previous_agent.memory.get_message_pairs(assistant_role=['assistant', 'DEBUG'])}"
+            # )
             LOGGER.info(f"Summary of previous conversation: {summary}")
             self.session_state["summary"] = summary
 
-            current_agent.additional_context = f"""
+            handoff_message = f"""
             You've been handed off this conversation from {previous_agent.name}.
-            Please consult the summary before answering.
+            Please consult the summary before answering, as well as the last message from the user.
             Don't answer the user's question if it's already been answered.
             
             <summary>
             {summary}
             </summary>
+            
+            <last_user_message>
+            {user_message}
+            </last_user_message>
             """
             LOGGER.info(f"Running agent: {current_agent.name}")
             # yield current_agent.get_user_message("\n\n")
-            yield from current_agent.run(user_message, stream=True)
 
-    def _run_current_agent(self, user_message: str) -> Iterator[RunResponse]:
+            resp = current_agent.run(handoff_message)
+            if not self.session_state["just_handed_off"]:
+                yield resp
+
+    def _run_current_agent(self, user_message: str) -> RunResponse:
         current_agent = self.agents[self.session_state["current_agent"]]
         LOGGER.info(f"Running agent: {current_agent.name}")
-        yield from current_agent.run(user_message, stream=True)
+        return current_agent.run(user_message)
 
 
 def human_input_generator():
@@ -215,12 +258,9 @@ USE_CASES = {
 
 
 def run_in_cli():
-    # use_case = "maintenance"
-    # use_case = "onboarding"
-    # use_case = "jailbreak_attempt"
     use_case = "human"
     # use_case = "Question for Triage, and then handoff to A"
-    use_case = "First A then B"
+    # use_case = "First A then B"
     for msg in USE_CASES[use_case]:
         print(
             Panel(
