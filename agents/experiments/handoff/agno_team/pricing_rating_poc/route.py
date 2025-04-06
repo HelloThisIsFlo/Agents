@@ -5,6 +5,7 @@ from agno.models.openai import OpenAIChat
 from agno.team.team import Team
 
 from agents.common import get_model
+from agents.experiments.handoff.agno_team.pricing_rating_poc.pricing_team import pricing_team
 
 def isin_to_cusip(isin):
     """
@@ -97,27 +98,6 @@ def get_security_ratings(cusip, date):
 
 
 
-pricing_agent = Agent(
-    name="Pricing Agent",
-    role="""You are a financial pricing specialist who provides security pricing information.
-    
-    Your responsibilities:
-    1. Ask the user for a CUSIP (Committee on Uniform Security Identification Procedures) identifier and a date.
-    2. Use the get_security_prices tool to retrieve pricing information for the specified security.
-    3. Present the pricing information in a well-formatted markdown table.
-    4. Flag any anomalies or suspicious pricing patterns (e.g., significant price differences between sources).
-    5. If the user provides an ISIN instead of a CUSIP, use the isin_to_cusip tool to convert it first.
-    
-    Always respond in a professional, concise manner appropriate for financial services.
-    """,
-    model=get_model(),
-    add_history_to_messages=True,
-    num_history_responses=10,
-    tools=[get_security_prices, isin_to_cusip],
-    show_tool_calls=True,
-    markdown=True,
-    add_datetime_to_instructions=True,
-)
 rating_agent = Agent(
     name="Rating Agent",
     role="""You are a financial rating specialist who provides security rating information.
@@ -133,7 +113,7 @@ rating_agent = Agent(
     """,
     model=get_model(),
     add_history_to_messages=True,
-    num_history_responses=10,
+    num_history_responses=100,
     tools=[get_security_ratings, isin_to_cusip],
     show_tool_calls=True,
     markdown=True,
@@ -146,30 +126,29 @@ pricing_rating_team = Team(
     name="Pricing and Rating Team",
     mode="route",
     model=get_model(),
-    members=[pricing_agent, rating_agent],
+    members=[pricing_team, rating_agent],
     # read_team_history=True,
-    num_of_interactions_from_history=10,
+    num_of_interactions_from_history=100,
     enable_team_history=True,
     markdown=True,
     description="""You are a financial information router that directs user queries to the appropriate specialist agent.
     The team consists of two specialized agents:
-    1. Pricing Agent - Handles questions about security pricing
+    1. Pricing Team - Handles questions about security pricing
     2. Rating Agent - Handles questions about security ratings
     
     Your job is to understand the user's query and route it to the correct agent.""",
     instructions=[
         "Identify whether the user is asking about security pricing or security ratings and route to the appropriate agent.",
-        "If the query is about pricing, route to the Pricing Agent.",
+        "If the query is about pricing or pricing anomalies, route to the Pricing Team.",
         "If the query is about ratings, route to the Rating Agent.",
         "If the user asks a question that is not related to security pricing or ratings, respond in English with:",
         "'I can only answer questions about security pricing and ratings. Please ask a question related to these topics.'",
-        "If the user asks about both pricing and ratings, route to the Pricing Agent first, then to the Rating Agent.",
+        "If the user asks about both pricing and ratings, ask the user to specify which they want to know first.",
         "Do not try to answer the questions yourself - delegate to the specialist agents."
     ],
     show_tool_calls=True,
     show_members_responses=True,
 )
-
 
 def human_input_generator():
     while True:
