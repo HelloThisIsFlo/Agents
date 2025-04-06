@@ -33,7 +33,6 @@ multi_language_team = Team(
     mode="route",
     model=get_model(),
     members=[english_agent, chinese_agent, french_agent],
-    show_tool_calls=True,
     markdown=True,
     description="You are a language router that directs questions to the appropriate language agent.",
     instructions=[
@@ -43,6 +42,7 @@ multi_language_team = Team(
         "Always check the language of the user's input before routing to an agent.",
         "For unsupported languages like Italian, respond in English with the above message.",
     ],
+    show_tool_calls=True,
     show_members_responses=True,
 )
 
