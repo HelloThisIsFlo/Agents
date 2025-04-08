@@ -7,7 +7,7 @@ from agno.models.message import Message
 from agno.playground import serve_playground_app, Playground
 from agno.storage.agent.sqlite import SqliteAgentStorage
 from agno.storage.workflow.sqlite import SqliteWorkflowStorage
-from agno.utils.log import get_logger
+from agno.utils.log import build_logger
 from agno.utils.pprint import pprint_run_response
 from agno.workflow import Workflow, RunResponse
 from dotenv import load_dotenv
@@ -17,7 +17,7 @@ from rich.panel import Panel
 
 from agents.common import get_model
 
-LOGGER = get_logger(__name__)
+LOGGER = build_logger(__name__)
 
 load_dotenv()
 
@@ -27,37 +27,6 @@ SQLITE_DB = str(SCRIPT_DIR / "tmp/agent_storage.db")
 DEBUG = False
 
 
-def patched_get_message_pairs(
-    self, user_role: str = "user", assistant_role: Optional[List[str]] = None
-) -> List[Tuple[Message, Message]]:
-    """Returns a list of tuples of (user message, assistant response)."""
-
-    if assistant_role is None:
-        assistant_role = ["assistant", "model", "CHATBOT"]
-
-    runs_as_message_pairs: List[Tuple[Message, Message]] = []
-    for run in self.runs:
-        if run.response and run.response.messages:
-            user_messages_from_run = None
-            assistant_messages_from_run = None
-
-            # Start from the END <- HOTFIX to look for the user message
-            for message in run.response.messages[::-1]:
-                if message.role == user_role:
-                    user_messages_from_run = message
-                    break
-
-            # Start from the end to look for the assistant response
-            for message in run.response.messages[::-1]:
-                if message.role in assistant_role:
-                    assistant_messages_from_run = message
-                    break
-
-            if user_messages_from_run and assistant_messages_from_run:
-                runs_as_message_pairs.append(
-                    (user_messages_from_run, assistant_messages_from_run)
-                )
-    return runs_as_message_pairs
 
 
 def get_storage(agent_name: str, workflow=False):
@@ -140,11 +109,6 @@ class HandoffExperiment(Workflow):
             "agent_a": self.agent_a,
             "agent_b": self.agent_b,
         }
-
-        # TMP: Hotfix
-        for agent in self.agents.values():
-            agent.initialize_agent()
-            agent.memory.__class__.get_message_pairs = patched_get_message_pairs
 
     def _handoff_to_agents(self, agent_name):
         if agent_name not in ["agent_a", "agent_b", "triage"]:
