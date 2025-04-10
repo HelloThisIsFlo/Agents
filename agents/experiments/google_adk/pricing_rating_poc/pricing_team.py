@@ -1,6 +1,9 @@
 from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
 
-GEMINI_MODEL = "gemini-2.5-pro-preview-03-25"
+# Replace Gemini model with OpenAI GPT-4o
+# Note: Requires OPENAI_API_KEY to be set in the environment
+GPT4O_MODEL = LiteLlm(model="openai/gpt-4o")
 
 ##################################################################################################################################################
 ############################################################ Define the Tools ###################################################################
@@ -106,7 +109,7 @@ def send_email_to_pricing_team(subject: str, body: str, recipient: str = "pricin
 
 # Original Pricing Agent (now part of the team)
 pricing_agent = Agent(
-    model=GEMINI_MODEL,
+    model=GPT4O_MODEL,
     name="pricing_agent",
     description="A financial pricing specialist who provides security pricing information.",
     instruction="""You are a financial pricing specialist who provides security pricing information.
@@ -131,7 +134,7 @@ pricing_agent = Agent(
 
 # New Pricing Support Agent (sub-agent)
 pricing_support_agent = Agent(
-    model=GEMINI_MODEL,
+    model=GPT4O_MODEL,
     name="pricing_support_agent",
     description="A financial pricing support specialist who helps users with pricing anomalies.",
     instruction="""You are a financial pricing support specialist who helps users with pricing anomalies.
@@ -157,7 +160,7 @@ pricing_support_agent = Agent(
 ##################################################################################################################################################
 
 pricing_team_agent = Agent(
-    model=GEMINI_MODEL,
+    model=GPT4O_MODEL,
     name="pricing_team",
     description="A financial pricing team that coordinates pricing agents to help users with security pricing information and anomalies.",
     instruction="""You are a financial pricing team coordinator that helps users with security pricing information and resolves pricing anomalies.

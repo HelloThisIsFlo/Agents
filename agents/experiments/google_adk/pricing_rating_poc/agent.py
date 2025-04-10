@@ -1,9 +1,12 @@
 from google.adk.agents import Agent
 from google.adk.runners import Runner
+from google.adk.models.lite_llm import LiteLlm
 
 from .pricing_team import pricing_team_agent, isin_to_cusip, get_current_date
 
-GEMINI_MODEL = "gemini-2.5-pro-preview-03-25"
+# Replace Gemini model with OpenAI GPT-4o
+# Note: Requires OPENAI_API_KEY to be set in the environment
+GPT4O_MODEL = LiteLlm(model="openai/gpt-4o")
 
 ##################################################################################################################################################
 ############################################################ Rating Agent Tools #################################################################
@@ -51,7 +54,7 @@ def get_security_ratings(cusip: str, date: str) -> str:
 ##################################################################################################################################################
 
 rating_agent = Agent(
-    model=GEMINI_MODEL,
+    model=GPT4O_MODEL,
     name="rating_agent",
     description="A financial rating specialist who provides security rating information.",
     instruction="""You are a financial rating specialist who provides security rating information.
@@ -73,7 +76,7 @@ rating_agent = Agent(
 ##################################################################################################################################################
 
 root_agent = Agent(
-    model=GEMINI_MODEL,
+    model=GPT4O_MODEL,
     name="pricing_rating_team",
     description="A financial information router that directs user queries to the appropriate specialist agent.",
     instruction="""You are a financial information router that directs user queries to the appropriate specialist agent.
