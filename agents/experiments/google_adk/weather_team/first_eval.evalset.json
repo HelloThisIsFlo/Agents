@@ -1,0 +1,62 @@
+[
+  {
+    "name": "double_handoff",
+    "data": [
+      {
+        "query": "Please: first greet me (my name is flo), then give me the weather in new york, then say goodbye to me",
+        "expected_tool_use": [
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "greeting_agent"
+            }
+          },
+          {
+            "tool_name": "say_hello",
+            "tool_input": {
+              "name": "flo"
+            }
+          },
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "weather_agent_v2"
+            }
+          },
+          {
+            "tool_name": "get_weather",
+            "tool_input": {
+              "city": "New York"
+            }
+          },
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "farewell_agent"
+            }
+          },
+          {
+            "tool_name": "say_goodbye",
+            "tool_input": {}
+          }
+        ],
+        "expected_intermediate_agent_responses": [
+          {
+            "author": "greeting_agent",
+            "text": "Hello, flo!\n"
+          },
+          {
+            "author": "weather_agent_v2",
+            "text": "The weather in New York is sunny with a temperature of 25\u00b0C."
+          }
+        ],
+        "reference": "Goodbye! Have a great day."
+      }
+    ],
+    "initial_session": {
+      "state": {},
+      "app_name": "weather_team",
+      "user_id": "user"
+    }
+  }
+]
