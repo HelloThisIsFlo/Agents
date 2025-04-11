@@ -1,9 +1,12 @@
 from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
+from google.adk.tools.agent_tool import AgentTool
+
+
 
 # Replace Gemini model with OpenAI GPT-4o
 # Note: Requires OPENAI_API_KEY to be set in the environment
-GPT4O_MODEL = LiteLlm(model="openai/gpt-4o")
+GPT4O_MODEL = LiteLlm(model="gpt-4o", parallel_tool_calls=False)
 
 ##################################################################################################################################################
 ############################################################ Define the Tools ###################################################################
@@ -159,23 +162,28 @@ pricing_support_agent = Agent(
 ############################################################ Root Agent ##########################################################################
 ##################################################################################################################################################
 
+# Create AgentTools from the specialized agents
+pricing_agent_tool = AgentTool(agent=pricing_agent)
+pricing_support_agent_tool = AgentTool(agent=pricing_support_agent)
+
+# Root Agent that uses specialized agents as tools (instead of using sub_agents)
 pricing_team_agent = Agent(
     model=GPT4O_MODEL,
     name="pricing_team",
     description="A financial pricing team that coordinates pricing agents to help users with security pricing information and anomalies.",
     instruction="""You are a financial pricing team coordinator that helps users with security pricing information and resolves pricing anomalies.
     
-    The team consists of two specialized agents:
-    1. pricing_agent - Handles questions about security pricing and detects anomalies
-    2. pricing_support_agent - Guides users through follow-up questions when anomalies are detected
+    You have access to two specialized agent tools:
+    1. pricing_agent_tool - For handling questions about security pricing and detecting anomalies
+    2. pricing_support_agent_tool - For guiding users through follow-up questions when anomalies are detected
     
-    Your job is to understand the user's query and coordinate the team members to provide the best possible assistance.
+    Your job is to understand the user's query and use the appropriate agent tool to provide the best possible assistance.
     
-    Delegation Rules:
-    - Start by routing all initial requests to the pricing_agent.
-    - If the pricing_agent detects an anomaly and the user wants to follow up, route to the pricing_support_agent.
-    - Ensure smooth handoffs between team members and maintain a coherent conversation flow.
-    - Do not try to answer the questions yourself - delegate to the specialist agents.
+    Tool Selection Guidelines:
+    - For initial pricing requests or ISIN/CUSIP inquiries, use the pricing_agent_tool.
+    - If a pricing anomaly is detected and the user wants to follow up, use the pricing_support_agent_tool.
+    - Ensure a coherent conversation flow when switching between tools.
+    - Do not try to answer the questions yourself - use the specialized agent tools instead.
     """,
-    sub_agents=[pricing_agent, pricing_support_agent]
+    tools=[pricing_agent_tool, pricing_support_agent_tool]
 )
