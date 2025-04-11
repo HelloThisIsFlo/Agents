@@ -58,6 +58,7 @@ def isin_to_cusip(isin: str) -> str:
 def get_security_prices(cusip: str, date: str, tool_context: ToolContext) -> str:
     """
     Returns price information for a security from multiple sources.
+    Also updates the state with the requested price date.
     
     Args:
         cusip (str): The CUSIP identifier for the security.
@@ -72,7 +73,13 @@ def get_security_prices(cusip: str, date: str, tool_context: ToolContext) -> str
     import json
     import random
 
-
+    # Update the state with the new price date
+    if cusip not in tool_context.state:
+        print(f"Initializing state for CUSIP: {cusip}")
+        tool_context.state[cusip] = {"price_dates": set(), "rating_dates": set()}
+    
+    print(f"Adding price date: {date}")
+    tool_context.state[cusip]["price_dates"].add(date)
     
     # Generate fake prices with slight variations
     base_price = random.uniform(50.0, 200.0)
@@ -111,38 +118,6 @@ def send_email_to_pricing_team(subject: str, body: str, recipient: str = "pricin
 
 
 
-def update_state(cusip: str, price_dates: List[str], rating_dates: List[str], tool_context: ToolContext):
-    """
-    Updates the state of the pricing team with new security information.
-    
-    Args:
-        cusip (str): The CUSIP identifier for the security.
-        price_dates (List[str]): List of dates to get prices for in YYYY-MM-DD format.
-        rating_dates (List[str]): List of dates to get ratings for in YYYY-MM-DD format.
-    """
-    # Update the state with new security information
-    # Initialize the cusip entry if it doesn't exist
-    print(f"--- Tool: update_state called for CUSIP: {cusip}, Price Dates: {price_dates}, Rating Dates: {rating_dates} ---")
-
-    if cusip not in tool_context.state:
-        print(f"Initializing state for CUSIP: {cusip}")
-        tool_context.state[cusip] = {"price_dates": set(), "rating_dates": set()}
-    
-    # Add new price dates to the set (automatically deduplicates)
-    for date in price_dates:
-        print(f"Adding price date: {date}")
-        tool_context.state[cusip]["price_dates"].add(date)
-    
-    # Add new rating dates to the set (automatically deduplicates)
-    for date in rating_dates:
-        print(f"Adding rating date: {date}")
-        tool_context.state[cusip]["rating_dates"].add(date)
-    # Use pprint to create a readable string representation of the state
-    state_str = pprint.pformat(tool_context.state)
-    return {'status': 'success', 'updated_state': state_str}
-
-
-
 ##################################################################################################################################################
 ############################################################ Sub-Agents ##########################################################################
 ##################################################################################################################################################
@@ -155,13 +130,12 @@ pricing_agent = Agent(
     instruction="""You are a financial pricing specialist who provides security pricing information.
     
     Your responsibilities:
-    1. ALWAYS update the state before checking pricing information.
-    2. Ask the user for a CUSIP (Committee on Uniform Security Identification Procedures) identifier and a date.
-    3. Use the get_security_prices tool to retrieve pricing information for the specified security.
-    4. Present the pricing information in a well-formatted markdown table.
-    5. Flag any anomalies or suspicious pricing patterns (e.g., significant price differences between sources).
-    6. If the user provides an ISIN instead of a CUSIP, use the isin_to_cusip tool to convert it first.
-    7. Handle dates in natural language format (e.g., "yesterday", "today", "last Friday").
+    1. Ask the user for a CUSIP (Committee on Uniform Security Identification Procedures) identifier and a date.
+    2. Use the get_security_prices tool to retrieve pricing information for the specified security.
+    3. Present the pricing information in a well-formatted markdown table.
+    4. Flag any anomalies or suspicious pricing patterns (e.g., significant price differences between sources).
+    5. If the user provides an ISIN instead of a CUSIP, use the isin_to_cusip tool to convert it first.
+    6. Handle dates in natural language format (e.g., "yesterday", "today", "last Friday").
     
     When you detect a pricing anomaly (significant price differences between sources), you should ask:
     "Would you like me to follow up with the team?"
@@ -170,7 +144,7 @@ pricing_agent = Agent(
     
     Always respond in a professional, concise manner appropriate for financial services.
     """,
-    tools=[get_security_prices, isin_to_cusip, get_current_date, update_state],
+    tools=[get_security_prices, isin_to_cusip, get_current_date],
 )
 
 # New Pricing Support Agent (sub-agent)

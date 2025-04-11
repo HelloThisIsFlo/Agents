@@ -1,17 +1,19 @@
 from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.models.lite_llm import LiteLlm
+from google.adk.tools import ToolContext
 
-from .pricing_team import pricing_team_agent, isin_to_cusip, get_current_date, GPT4O_MODEL, update_state
+from .pricing_team import pricing_team_agent, isin_to_cusip, get_current_date, GPT4O_MODEL
 
 
 ##################################################################################################################################################
 ############################################################ Rating Agent Tools #################################################################
 ##################################################################################################################################################
 
-def get_security_ratings(cusip: str, date: str) -> str:
+def get_security_ratings(cusip: str, date: str, tool_context: ToolContext) -> str:
     """
     Returns rating information for a security from multiple rating agencies.
+    Also updates the state with the requested rating date.
     
     Args:
         cusip (str): The CUSIP identifier for the security.
@@ -25,6 +27,14 @@ def get_security_ratings(cusip: str, date: str) -> str:
     
     import json
     import random
+    
+    # Update the state with the new rating date
+    if cusip not in tool_context.state:
+        print(f"Initializing state for CUSIP: {cusip}")
+        tool_context.state[cusip] = {"price_dates": set(), "rating_dates": set()}
+    
+    print(f"Adding rating date: {date}")
+    tool_context.state[cusip]["rating_dates"].add(date)
     
     # Define possible ratings from each agency
     ratings = {
@@ -57,15 +67,14 @@ rating_agent = Agent(
     instruction="""You are a financial rating specialist who provides security rating information.
     
     Your responsibilities:
-    1. ALWAYS update the state before checking rating information.
-    2. Ask the user for a CUSIP (Committee on Uniform Security Identification Procedures) identifier.
-    3. Use the get_security_ratings tool to retrieve rating information for the specified security.
-    4. Present the rating information in a well-formatted markdown table.
-    5. Flag any anomalies or suspicious rating patterns (e.g., significant rating differences between agencies).
-    6. If the user provides an ISIN instead of a CUSIP, use the isin_to_cusip tool to convert it first.
+    1. Ask the user for a CUSIP (Committee on Uniform Security Identification Procedures) identifier.
+    2. Use the get_security_ratings tool to retrieve rating information for the specified security.
+    3. Present the rating information in a well-formatted markdown table.
+    4. Flag any anomalies or suspicious rating patterns (e.g., significant rating differences between agencies).
+    5. If the user provides an ISIN instead of a CUSIP, use the isin_to_cusip tool to convert it first.
     Always respond in a professional, concise manner appropriate for financial services.
     """,
-    tools=[get_security_ratings, isin_to_cusip, get_current_date, update_state],
+    tools=[get_security_ratings, isin_to_cusip, get_current_date],
 )
 
 ##################################################################################################################################################
@@ -92,9 +101,6 @@ root_agent = Agent(
       'I can only answer questions about security pricing and ratings. Please ask a question related to these topics.'
     - If the user asks about both pricing and ratings, ask the user to specify which they want to know first.
     - Do not try to answer the questions yourself - delegate to the specialist agents.
-
-    Extra Rules:
-    - ALWAYS update the state when you have the new security information.
     """,
     sub_agents=[pricing_team_agent, rating_agent]
 )
