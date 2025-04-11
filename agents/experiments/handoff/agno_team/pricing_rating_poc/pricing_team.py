@@ -54,7 +54,7 @@ def get_security_prices(cusip, date):
         "sources": {
             "Bloomberg": round(base_price * (1 + random.uniform(-0.02, 0.02)), 2),
             "Yahoo": round(base_price * (1 + random.uniform(-0.03, 0.03)), 2),
-            "BobTheBuilder": round(base_price * (1 + random.uniform(-0.05, 0.05)), 2)
+            "CharlesRiver": round(base_price * (1 + random.uniform(-0.05, 0.05)), 2)
         }
     }
     

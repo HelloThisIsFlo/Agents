@@ -1,0 +1,265 @@
+[
+  {
+    "name": "crazy_complex",
+    "data": [
+      {
+        "query": "I want info on GB00BNNGP668",
+        "expected_tool_use": [],
+        "expected_intermediate_agent_responses": [],
+        "reference": "I can help you with either pricing or ratings information for the security GB00BNNGP668. Could you please specify which one you are interested in first?"
+      },
+      {
+        "query": "pricing",
+        "expected_tool_use": [
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "pricing_team"
+            }
+          },
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "pricing_agent"
+            }
+          },
+          {
+            "tool_name": "isin_to_cusip",
+            "tool_input": {
+              "isin": "GB00BNNGP668"
+            }
+          }
+        ],
+        "expected_intermediate_agent_responses": [
+          {
+            "author": "pricing_agent",
+            "text": "It seems you are interested in pricing information for the security with ISIN GB00BNNGP668. Since you have provided an ISIN, I will first convert it to a CUSIP. Let's proceed with that conversion."
+          }
+        ],
+        "reference": "The ISIN GB00BNNGP668 has been converted to the CUSIP 00BNNGP69. Please provide the date for which you would like the pricing information, or specify if you'd like it for \"today\" or \"yesterday\"."
+      },
+      {
+        "query": "Yesterady yep",
+        "expected_tool_use": [
+          {
+            "tool_name": "get_current_date",
+            "tool_input": {}
+          },
+          {
+            "tool_name": "get_security_prices",
+            "tool_input": {
+              "cusip": "00BNNGP69",
+              "date": "2025-04-10"
+            }
+          }
+        ],
+        "expected_intermediate_agent_responses": [],
+        "reference": "Here is the pricing information for the security with CUSIP 00BNNGP69 as of yesterday, 2025-04-10:\n\n| Source        | Price  |\n|---------------|--------|\n| Bloomberg     | 134.92 |\n| Yahoo         | 136.04 |\n| CharlesRiver | 137.93 |\n\n### Anomaly Detection\nThere are noticeable pricing differences between the sources, especially between Bloomberg and CharlesRiver.\n\nWould you like me to follow up with the team regarding these discrepancies?"
+      },
+      {
+        "query": "Oh sure that's a big deal",
+        "expected_tool_use": [
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "pricing_support_agent"
+            }
+          }
+        ],
+        "expected_intermediate_agent_responses": [
+          {
+            "author": "pricing_agent",
+            "text": "I will hand this off to the pricing support agent to investigate the discrepancies further. Thank you for bringing it to our attention."
+          }
+        ],
+        "reference": "To help investigate the pricing anomalies you noticed for the security with CUSIP 00BNNGP69 on 2025-04-10, I'll need to ask you a few questions:\n\n1. **When did the issue start?**"
+      },
+      {
+        "query": "2 weeks ago",
+        "expected_tool_use": [],
+        "expected_intermediate_agent_responses": [],
+        "reference": "2. **Are colleagues affected as well, or is it just you noticing the anomalies?**"
+      },
+      {
+        "query": "onome yeah, but he's on windows",
+        "expected_tool_use": [],
+        "expected_intermediate_agent_responses": [],
+        "reference": "3. **What environment are you using (e.g., Windows, Mac)?**"
+      },
+      {
+        "query": "mac",
+        "expected_tool_use": [],
+        "expected_intermediate_agent_responses": [],
+        "reference": "Thank you for the information. Here's a summary of what you provided:\n\n- The pricing anomaly for the security with CUSIP 00BNNGP69 started approximately two weeks ago.\n- A colleague, Onome, is also affected by this issue.\n- You are using a Mac environment, while your colleague Onome is using Windows.\n\nI will now draft an email to the pricing team with these details. Is there anything you would like to add or modify before I send it?"
+      },
+      {
+        "query": "Nope all good, yo ucan send",
+        "expected_tool_use": [
+          {
+            "tool_name": "send_email_to_pricing_team",
+            "tool_input": {
+              "subject": "Pricing Anomaly Investigation for CUSIP 00BNNGP69",
+              "body": "Hello Pricing Team,\n\nWe have identified a pricing anomaly for the security with CUSIP 00BNNGP69, evident from discrepancies in sources such as Bloomberg (134.92), Yahoo (136.04), and CharlesRiver (137.93) as of 2025-04-10.\n\nDetails:\n- The issue began about two weeks ago.\n- Affected users include me, using a Mac, and my colleague, Onome, who is on Windows.\n\nPlease investigate these discrepancies and let us know of any findings or required actions.\n\nThank you,\n[Your Name]",
+              "recipient": "pricing team"
+            }
+          }
+        ],
+        "expected_intermediate_agent_responses": [],
+        "reference": "The email has been successfully sent to the pricing team. They will look into the discrepancies and follow up with you. Thank you for your patience and for bringing this to our attention. If you have any other questions or concerns, feel free to reach out."
+      },
+      {
+        "query": "Awesome! Can I also get the rating for it?",
+        "expected_tool_use": [
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "pricing_team"
+            }
+          },
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "rating_agent"
+            }
+          },
+          {
+            "tool_name": "get_current_date",
+            "tool_input": {}
+          },
+          {
+            "tool_name": "get_security_ratings",
+            "tool_input": {
+              "cusip": "00BNNGP69",
+              "date": "2025-04-11"
+            }
+          }
+        ],
+        "expected_intermediate_agent_responses": [],
+        "reference": "Here is the rating information for the security with CUSIP 00BNNGP69 as of today, 2025-04-11:\n\n| Rating Agency | Rating |\n|---------------|--------|\n| Fitch         | AA+    |\n| Moody's       | A1     |\n| S&P           | BBB    |\n\n### Anomaly Detection\nThere are significant differences in the ratings provided by Fitch, Moody's, and S&P. Such discrepancies may warrant closer analysis to understand the underlying reasons.\n\nIf you have further questions or need more detailed analysis, feel free to reach out!"
+      },
+      {
+        "query": "Cool cool cool. Now just double checking. Coudl you give me the pricing but for 3 weeks ago and 4 weeks ago. just want to check something",
+        "expected_tool_use": [
+          {
+            "tool_name": "get_security_ratings",
+            "tool_input": {
+              "cusip": "00BNNGP69",
+              "date": "2025-03-14"
+            }
+          },
+          {
+            "tool_name": "get_security_ratings",
+            "tool_input": {
+              "cusip": "00BNNGP69",
+              "date": "2025-03-21"
+            }
+          }
+        ],
+        "expected_intermediate_agent_responses": [],
+        "reference": "It seems I misunderstood your last request related to pricing data. Could you please confirm if indeed you want the ratings for 3 weeks and 4 weeks ago\u2014or was it actually the pricing data you meant to ask for?"
+      },
+      {
+        "query": "Nope pricing. I'm good with rating for now",
+        "expected_tool_use": [
+          {
+            "tool_name": "get_security_ratings",
+            "tool_input": {
+              "cusip": "00BNNGP69",
+              "date": "2025-03-14"
+            }
+          },
+          {
+            "tool_name": "get_security_ratings",
+            "tool_input": {
+              "cusip": "00BNNGP69",
+              "date": "2025-03-21"
+            }
+          },
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "pricing_team"
+            }
+          },
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "pricing_agent"
+            }
+          },
+          {
+            "tool_name": "get_security_prices",
+            "tool_input": {
+              "cusip": "00BNNGP69",
+              "date": "2025-03-14"
+            }
+          },
+          {
+            "tool_name": "get_security_prices",
+            "tool_input": {
+              "cusip": "00BNNGP69",
+              "date": "2025-03-21"
+            }
+          }
+        ],
+        "expected_intermediate_agent_responses": [
+          {
+            "author": "rating_agent",
+            "text": "I apologize for the oversight. I will transfer you to the pricing team for historical price data on the CUSIP '00BNNGP69'."
+          }
+        ],
+        "reference": "Here is the pricing information for the security with CUSIP 00BNNGP69 for the specified dates:\n\n**As of 2025-03-14:**\n| Source        | Price  |\n|---------------|--------|\n| Bloomberg     | 58.70  |\n| Yahoo         | 61.28  |\n| CharlesRiver | 59.17  |\n\n**As of 2025-03-21:**\n| Source        | Price   |\n|---------------|---------|\n| Bloomberg     | 186.64  |\n| Yahoo         | 190.22  |\n| CharlesRiver | 198.38  |\n\n### Anomaly Detection\nNoticeable discrepancies in the pricing data across the sources might require further investigation.\n\nIf you have any further questions or need help with something else, feel free to ask!"
+      },
+      {
+        "query": "Ah so maybe it didn't start just 2 weeks ago!",
+        "expected_tool_use": [],
+        "expected_intermediate_agent_responses": [],
+        "reference": "It appears that the pricing discrepancies were present even earlier than two weeks ago. If you'd like to further investigate these issues or need assistance with a deeper analysis, feel free to let me know. The team is always here to help!"
+      },
+      {
+        "query": "yeah let's do this",
+        "expected_tool_use": [
+          {
+            "tool_name": "transfer_to_agent",
+            "tool_input": {
+              "agent_name": "pricing_support_agent"
+            }
+          }
+        ],
+        "expected_intermediate_agent_responses": [
+          {
+            "author": "pricing_agent",
+            "text": "I will notify the pricing support agent to further investigate the extended period of pricing discrepancies. One moment, please."
+          }
+        ],
+        "reference": "To help initiate a deeper investigation into the prolonged pricing discrepancies for the security with CUSIP 00BNNGP69, I will verify a couple of details with you:\n\n- **On which date did you first notice the discrepancies?** Should we assume it was around the time you mentioned two weeks ago, or is there a new date based on this additional data?\n  \n- **Would you like to provide any specific observations about the sources involved (e.g., Bloomberg, Yahoo, CharlesRiver)?**\n\nThis information will help us refine the investigation. Once confirmed, I'll draft a detailed follow-up to the pricing team."
+      },
+      {
+        "query": "You can see, no? ",
+        "expected_tool_use": [],
+        "expected_intermediate_agent_responses": [],
+        "reference": "Based on the information and pricing data reviewed:\n\n- The discrepancies were present at least as early as March 14, 2025.\n- The sources exhibiting varying prices include Bloomberg, Yahoo, and CharlesRiver.\n\nI'll draft an email to the pricing team to investigate these ongoing discrepancies. Is there any other detail you'd like to include before I send this email?"
+      },
+      {
+        "query": "Nope all good. and maybe apologize for the duplicate email \ud83d\ude05",
+        "expected_tool_use": [
+          {
+            "tool_name": "send_email_to_pricing_team",
+            "tool_input": {
+              "subject": "Extended Pricing Discrepancies for CUSIP 00BNNGP69",
+              "body": "Hello Pricing Team,\n\nWe've identified ongoing pricing discrepancies for the security with CUSIP 00BNNGP69, dating back at least to March 14, 2025, based on the following data:\n- **As of 2025-03-14:**\n  - Bloomberg: 58.70 \n  - Yahoo: 61.28 \n  - CharlesRiver: 59.17 \n- **As of 2025-03-21:**\n  - Bloomberg: 186.64 \n  - Yahoo: 190.22 \n  - CharlesRiver: 198.38\n\nNotable discrepancies are occurring across different sources like Bloomberg, Yahoo, and CharlesRiver.\n\nPlease investigate these discrepancies that appear to have started earlier than initially reported. Apologies for the duplicate email regarding the same issue.\n\nThank you for your understanding and assistance.\n\nBest Regards,\n[Your Name]",
+              "recipient": "pricing team"
+            }
+          }
+        ],
+        "expected_intermediate_agent_responses": [],
+        "reference": "The follow-up email has been successfully sent to the pricing team. They'll work on investigating the extended period of discrepancies. I appreciate your patience and cooperation. If you have more questions or need further assistance, feel free to reach out!"
+      }
+    ],
+    "initial_session": {
+      "state": {},
+      "app_name": "pricing_rating_poc",
+      "user_id": "user"
+    }
+  }
+]

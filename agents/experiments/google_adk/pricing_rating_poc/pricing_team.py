@@ -1,9 +1,13 @@
 from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
+from typing import List
+from google.adk.tools import ToolContext
+import pprint
 
 # Replace Gemini model with OpenAI GPT-4o
 # Note: Requires OPENAI_API_KEY to be set in the environment
-GPT4O_MODEL = LiteLlm(model="openai/gpt-4o")
+GPT4O_MODEL = LiteLlm(model="gpt-4o", parallel_tool_calls=False)
+
 
 ##################################################################################################################################################
 ############################################################ Define the Tools ###################################################################
@@ -51,7 +55,7 @@ def isin_to_cusip(isin: str) -> str:
     return fake_cusip
 
 
-def get_security_prices(cusip: str, date: str) -> str:
+def get_security_prices(cusip: str, date: str, tool_context: ToolContext) -> str:
     """
     Returns price information for a security from multiple sources.
     
@@ -67,6 +71,8 @@ def get_security_prices(cusip: str, date: str) -> str:
     
     import json
     import random
+
+
     
     # Generate fake prices with slight variations
     base_price = random.uniform(50.0, 200.0)
@@ -77,7 +83,7 @@ def get_security_prices(cusip: str, date: str) -> str:
         "sources": {
             "Bloomberg": round(base_price * (1 + random.uniform(-0.02, 0.02)), 2),
             "Yahoo": round(base_price * (1 + random.uniform(-0.03, 0.03)), 2),
-            "BobTheBuilder": round(base_price * (1 + random.uniform(-0.05, 0.05)), 2)
+            "CharlesRiver": round(base_price * (1 + random.uniform(-0.05, 0.05)), 2)
         }
     }
     
@@ -103,6 +109,40 @@ def send_email_to_pricing_team(subject: str, body: str, recipient: str = "pricin
     return f"Email has been sent to {recipient} with subject: {subject}"
 
 
+
+
+def update_state(cusip: str, price_dates: List[str], rating_dates: List[str], tool_context: ToolContext):
+    """
+    Updates the state of the pricing team with new security information.
+    
+    Args:
+        cusip (str): The CUSIP identifier for the security.
+        price_dates (List[str]): List of dates to get prices for in YYYY-MM-DD format.
+        rating_dates (List[str]): List of dates to get ratings for in YYYY-MM-DD format.
+    """
+    # Update the state with new security information
+    # Initialize the cusip entry if it doesn't exist
+    print(f"--- Tool: update_state called for CUSIP: {cusip}, Price Dates: {price_dates}, Rating Dates: {rating_dates} ---")
+
+    if cusip not in tool_context.state:
+        print(f"Initializing state for CUSIP: {cusip}")
+        tool_context.state[cusip] = {"price_dates": set(), "rating_dates": set()}
+    
+    # Add new price dates to the set (automatically deduplicates)
+    for date in price_dates:
+        print(f"Adding price date: {date}")
+        tool_context.state[cusip]["price_dates"].add(date)
+    
+    # Add new rating dates to the set (automatically deduplicates)
+    for date in rating_dates:
+        print(f"Adding rating date: {date}")
+        tool_context.state[cusip]["rating_dates"].add(date)
+    # Use pprint to create a readable string representation of the state
+    state_str = pprint.pformat(tool_context.state)
+    return {'status': 'success', 'updated_state': state_str}
+
+
+
 ##################################################################################################################################################
 ############################################################ Sub-Agents ##########################################################################
 ##################################################################################################################################################
@@ -115,12 +155,13 @@ pricing_agent = Agent(
     instruction="""You are a financial pricing specialist who provides security pricing information.
     
     Your responsibilities:
-    1. Ask the user for a CUSIP (Committee on Uniform Security Identification Procedures) identifier and a date.
-    2. Use the get_security_prices tool to retrieve pricing information for the specified security.
-    3. Present the pricing information in a well-formatted markdown table.
-    4. Flag any anomalies or suspicious pricing patterns (e.g., significant price differences between sources).
-    5. If the user provides an ISIN instead of a CUSIP, use the isin_to_cusip tool to convert it first.
-    6. Handle dates in natural language format (e.g., "yesterday", "today", "last Friday").
+    1. ALWAYS update the state before checking pricing information.
+    2. Ask the user for a CUSIP (Committee on Uniform Security Identification Procedures) identifier and a date.
+    3. Use the get_security_prices tool to retrieve pricing information for the specified security.
+    4. Present the pricing information in a well-formatted markdown table.
+    5. Flag any anomalies or suspicious pricing patterns (e.g., significant price differences between sources).
+    6. If the user provides an ISIN instead of a CUSIP, use the isin_to_cusip tool to convert it first.
+    7. Handle dates in natural language format (e.g., "yesterday", "today", "last Friday").
     
     When you detect a pricing anomaly (significant price differences between sources), you should ask:
     "Would you like me to follow up with the team?"
@@ -129,7 +170,7 @@ pricing_agent = Agent(
     
     Always respond in a professional, concise manner appropriate for financial services.
     """,
-    tools=[get_security_prices, isin_to_cusip, get_current_date],
+    tools=[get_security_prices, isin_to_cusip, get_current_date, update_state],
 )
 
 # New Pricing Support Agent (sub-agent)
@@ -147,7 +188,8 @@ pricing_support_agent = Agent(
        - What environment are they using (e.g., Windows, Mac)?
     3. If not sure ask for clarification.
     4. After you have all the required info, provide a summary of the information collected and assure the user is happy with the email to be sent.
-    5. Only THEN (all info & summary validated by user), send the email to the pricing team.
+    5. Only THEN (all info & summary validated by user), update the state with the new security information.
+    6. Send the email to the pricing team.
 
     Always respond in a professional, concise manner appropriate for financial services.
     """,
@@ -177,5 +219,5 @@ pricing_team_agent = Agent(
     - Ensure smooth handoffs between team members and maintain a coherent conversation flow.
     - Do not try to answer the questions yourself - delegate to the specialist agents.
     """,
-    sub_agents=[pricing_agent, pricing_support_agent]
+    sub_agents=[pricing_agent, pricing_support_agent],
 )
