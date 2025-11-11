@@ -1,0 +1,48 @@
+---
+description: Test-Driven Development Workflow
+alwaysApply: false
+---
+
+This project follows TDD principles - write tests before implementing functionality.
+
+## Testing Workflow
+
+1. **Write the test first** - Create a failing test that describes the expected behavior
+2. **Run the test** - Verify it fails as expected using `uv run pytest`
+3. **Implement the minimum code** - Write just enough code to make the test pass
+4. **Refactor** - Improve the code while keeping tests green
+
+## Running Tests
+
+- **All tests**: `uv run pytest`
+- **Specific test file**: `uv run pytest test/path/to/test_file.py`
+- **Specific test function**: `uv run pytest test/path/to/test_file.py::test_function_name`
+- **With coverage**: `uv run pytest --cov=src`
+
+## Test Structure
+
+- Tests are located in the [test/](mdc:test/) directory
+- Test files should mirror the source structure (e.g., `test/adk_web/job_application_team/test_cv.py`)
+- Test functions should start with `test_`
+- Use descriptive test names that explain the behavior being tested
+
+## Example Test Structure
+
+```python
+def test_function_name_should_describe_expected_behavior():
+    # Arrange - Set up test data
+
+    # Act - Execute the function being tested
+
+    # Assert - Verify the expected outcome
+    assert result == expected_value
+```
+
+## Before Implementing New Features
+
+Always write a test first that:
+
+- Describes the expected behavior
+- Uses the API you want to create
+- Fails initially (red phase)
+- Passes once you implement the feature (green phase)
