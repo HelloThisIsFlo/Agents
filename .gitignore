@@ -1,5 +1,12 @@
 .env
 *.db
+.langgraph_api
+
+# Agent-generated files
+agent_files/*
+!agent_files/.gitkeep
+
+##########################
 
 # Created by https://www.toptal.com/developers/gitignore/api/pycharm
 # Edit at https://www.toptal.com/developers/gitignore?templates=pycharm
@@ -295,4 +302,3 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
-

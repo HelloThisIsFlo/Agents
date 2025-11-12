@@ -1,0 +1,10 @@
+{
+  "dependencies": [
+    "."
+  ],
+  "graphs": {
+    "POC: Simple Agent": "./src/poc/simple_agent.py:graph",
+    "POC: Deep Agent": "./src/poc/deep_agent.py:graph"
+  },
+  "env": ".env"
+}
