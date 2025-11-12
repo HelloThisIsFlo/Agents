@@ -3,8 +3,11 @@
 .langgraph_api
 
 # Agent-generated files
-agent_files/*
+agent_files/**
+!agent_files/
 !agent_files/.gitkeep
+!agent_files/walkandlearn_summary/
+!agent_files/walkandlearn_summary/.gitkeep
 
 ##########################
 

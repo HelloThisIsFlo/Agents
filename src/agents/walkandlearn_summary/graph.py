@@ -1,7 +1,6 @@
 """LangGraph agent for summarizing conversations with emotional and technical summaries."""
 
-from typing_extensions import TypedDict
-
+from pathlib import Path
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage
@@ -13,16 +12,13 @@ from src.agents.walkandlearn_summary.prompts import (
     TECHNICAL_SUMMARY_PROMPT,
 )
 
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
-MODEL_NAME = "gpt-4o-mini"
+MODEL_NAME = "gpt-5-mini"
 MODEL_TEMPERATURE = 0
 
-INPUT_FILE_PATH = (
-    "TODO_INPUT_FILE_PATH.txt"  # TODO: Replace with actual input file path
-)
-OUTPUT_FILE_PATH = (
-    "TODO_OUTPUT_FILE_PATH.md"  # TODO: Replace with actual output file path
-)
+INPUT_FILE_PATH = PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / "input.md"
+OUTPUT_FILE_PATH = PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / "output.md"
 
 
 class SummaryState(MessagesState):
@@ -33,13 +29,9 @@ class SummaryState(MessagesState):
 
 model = init_chat_model(MODEL_NAME, temperature=MODEL_TEMPERATURE)
 
-emotional_agent = create_agent(
-    model=model, tools=[], system_prompt=EMOTIONAL_SUMMARY_PROMPT
-)
+emotional_agent = create_agent(model=model, system_prompt=EMOTIONAL_SUMMARY_PROMPT)
 
-technical_agent = create_agent(
-    model=model, tools=[], system_prompt=TECHNICAL_SUMMARY_PROMPT
-)
+technical_agent = create_agent(model=model, system_prompt=TECHNICAL_SUMMARY_PROMPT)
 
 
 def load_conversation_node(state: SummaryState) -> dict:
@@ -51,7 +43,7 @@ def emotional_summary_node(state: SummaryState) -> dict:
         {
             "messages": [
                 HumanMessage(
-                    content=f"Please provide an emotional summary of the following conversation:\n\n{state['conversation']}"
+                    content=f"Here is the conversation to summarize:\n\n{state['conversation']}"
                 )
             ]
         }
