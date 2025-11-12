@@ -9,114 +9,80 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import StateGraph, START, END, MessagesState
 
 
-# Define custom state extending MessagesState
-class SummaryState(MessagesState):
-    """State for the summarization workflow."""
+MODEL_NAME = "gpt-4o-mini"
+MODEL_TEMPERATURE = 0
 
+INPUT_FILE_PATH = "TODO_INPUT_FILE_PATH.txt"  # TODO: Replace with actual input file path
+OUTPUT_FILE_PATH = "TODO_OUTPUT_FILE_PATH.md"  # TODO: Replace with actual output file path
+
+EMOTIONAL_SUMMARY_PROMPT = """You are the emotional summary agent.
+
+TODO: Replace this placeholder with the actual system prompt for emotional summarization."""
+
+TECHNICAL_SUMMARY_PROMPT = """You are the technical summary agent.
+
+TODO: Replace this placeholder with the actual system prompt for technical summarization."""
+
+
+class SummaryState(MessagesState):
     conversation: str
     emotional_summary: str
     technical_summary: str
 
 
-# Initialize the model (cheap model for experimentation)
-model = init_chat_model("gpt-4o-mini", temperature=0)
+model = init_chat_model(MODEL_NAME, temperature=MODEL_TEMPERATURE)
 
-
-# Create agents for summarization
 emotional_agent = create_agent(
     model=model,
     tools=[],
-    system_prompt="""You are the emotional summary agent.
-    
-TODO: Replace this placeholder with the actual system prompt for emotional summarization.""",
+    system_prompt=EMOTIONAL_SUMMARY_PROMPT
 )
 
 technical_agent = create_agent(
     model=model,
     tools=[],
-    system_prompt="""You are the technical summary agent.
-    
-TODO: Replace this placeholder with the actual system prompt for technical summarization.""",
+    system_prompt=TECHNICAL_SUMMARY_PROMPT
 )
 
 
-# Node functions
-def load_conversation_node(state: SummaryState) -> dict:
-    """Load conversation from file.
-
-    TODO: Replace placeholder path with actual file path.
-    """
-    # Placeholder file path - replace with actual path
-    file_path = Path("TODO_INPUT_FILE_PATH.txt")
-
-    # Read the conversation from file
+def _read_file(file_path: str) -> str:
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            conversation = f.read()
+        with open(Path(file_path), "r", encoding="utf-8") as f:
+            return f.read()
     except FileNotFoundError:
-        conversation = "File not found. Please set the correct file path."
+        return f"File not found: {file_path}. Please set the correct file path in the configuration constants."
 
-    return {"conversation": conversation}
+
+def _write_file(file_path: str, content: str) -> None:
+    with open(Path(file_path), "w", encoding="utf-8") as f:
+        f.write(content)
+
+
+def load_conversation_node(state: SummaryState) -> dict:
+    return {"conversation": _read_file(INPUT_FILE_PATH)}
 
 
 def emotional_summary_node(state: SummaryState) -> dict:
-    """Generate emotional summary using the emotional agent."""
-    conversation = state["conversation"]
-
-    # Invoke the emotional agent with the conversation
-    result = emotional_agent.invoke(
-        {
-            "messages": [
-                HumanMessage(
-                    content=f"Please provide an emotional summary of the following conversation:\n\n{conversation}"
-                )
-            ]
-        }
-    )
-
-    # Extract the summary from the agent's response
-    emotional_summary = result["messages"][-1].content
-
-    return {"emotional_summary": emotional_summary}
+    result = emotional_agent.invoke({
+        "messages": [HumanMessage(content=f"Please provide an emotional summary of the following conversation:\n\n{state['conversation']}")]
+    })
+    return {"emotional_summary": result["messages"][-1].content}
 
 
 def technical_summary_node(state: SummaryState) -> dict:
-    """Generate technical summary using the technical agent.
-
-    NOTE: Currently returns a placeholder to save API costs during development.
-    Uncomment the code below to enable the actual technical agent.
-    """
-    # Placeholder response to avoid API costs
-    return {
-        "technical_summary": "[Technical summary placeholder - agent commented out for cost savings]"
-    }
-
-    # TODO: Uncomment below to enable technical agent
-    # conversation = state["conversation"]
-    #
-    # # Invoke the technical agent with the conversation
+    # TODO: Uncomment below to enable technical agent (currently placeholder to save API costs)
+    return {"technical_summary": "[Technical summary placeholder - agent commented out for cost savings]"}
+    
     # result = technical_agent.invoke({
-    #     "messages": [HumanMessage(content=f"Please provide a technical summary of the following conversation:\n\n{conversation}")]
+    #     "messages": [HumanMessage(content=f"Please provide a technical summary of the following conversation:\n\n{state['conversation']}")]
     # })
-    #
-    # # Extract the summary from the agent's response
-    # technical_summary = result["messages"][-1].content
-    #
-    # return {"technical_summary": technical_summary}
+    # return {"technical_summary": result["messages"][-1].content}
 
 
 def write_output_node(state: SummaryState) -> dict:
-    """Write the summaries to a markdown file.
+    content = f"""# Emotional Summary
 
-    TODO: Replace placeholder path with actual output file path.
-    """
-    emotional_summary = state["emotional_summary"]
-    technical_summary = state["technical_summary"]
-
-    # Format the output as markdown
-    output_content = f"""# Emotional Summary
-
-{emotional_summary}
+{state['emotional_summary']}
 
 
 
@@ -127,34 +93,26 @@ def write_output_node(state: SummaryState) -> dict:
 
 # Technical Summary
 
-{technical_summary}
+{state['technical_summary']}
 """
-
-    # Placeholder output file path - replace with actual path
-    output_path = Path("TODO_OUTPUT_FILE_PATH.md")
-
-    # Write to file
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(output_content)
-
+    _write_file(OUTPUT_FILE_PATH, content)
     return {}
 
 
-# Build the graph
 graph = (
     StateGraph(SummaryState)
+
     .add_node("load_conversation", load_conversation_node)
     .add_node("emotional_summary", emotional_summary_node)
     .add_node("technical_summary", technical_summary_node)
     .add_node("write_output", write_output_node)
+
     .add_edge(START, "load_conversation")
     .add_edge("load_conversation", "emotional_summary")
     .add_edge("load_conversation", "technical_summary")
     .add_edge("emotional_summary", "write_output")
     .add_edge("technical_summary", "write_output")
     .add_edge("write_output", END)
+
     .compile()
 )
-
-# TODO: Consider using structured output pattern in LangGraph for better control over summary format
-# See: https://docs.langchain.com/oss/python/langgraph/ for structured output examples
