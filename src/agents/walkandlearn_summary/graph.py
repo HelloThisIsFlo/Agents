@@ -3,7 +3,7 @@
 from pathlib import Path
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph import StateGraph, START, END, MessagesState
 
 from src.agents.walkandlearn_summary.io import read_file, write_file, format_summary
@@ -14,8 +14,11 @@ from src.agents.walkandlearn_summary.prompts import (
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
-MODEL_NAME = "gpt-5-mini"
+MODEL_NAME = "gpt-5-nano"
+MODEL_NAME = "gpt-5"
 MODEL_TEMPERATURE = 0
+TECHNICAL_DISABLED = False
+PRINT_SUMMARY_IN_CHAT = True
 
 INPUT_FILE_PATH = PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / "input.md"
 OUTPUT_FILE_PATH = PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / "output.md"
@@ -27,61 +30,76 @@ class SummaryState(MessagesState):
     technical_summary: str
 
 
-model = init_chat_model(MODEL_NAME, temperature=MODEL_TEMPERATURE)
-
-emotional_agent = create_agent(model=model, system_prompt=EMOTIONAL_SUMMARY_PROMPT)
-
-technical_agent = create_agent(model=model, system_prompt=TECHNICAL_SUMMARY_PROMPT)
-
-
-def load_conversation_node(state: SummaryState) -> dict:
-    return {"conversation": read_file(INPUT_FILE_PATH)}
-
-
-def emotional_summary_node(state: SummaryState) -> dict:
-    result = emotional_agent.invoke(
+def generate_summary_with_agent(agent, conversation: str) -> str:
+    result = agent.invoke(
         {
             "messages": [
                 HumanMessage(
-                    content=f"Here is the conversation to summarize:\n\n{state['conversation']}"
+                    content=f"Here is the conversation to summarize:\n\n{conversation}"
                 )
             ]
         }
     )
-    return {"emotional_summary": result["messages"][-1].content}
+    return result["messages"][-1].content
 
 
-def technical_summary_node(state: SummaryState) -> dict:
-    # TODO: Uncomment below to enable technical agent (currently placeholder to save API costs)
-    return {
-        "technical_summary": "[Technical summary placeholder - agent commented out for cost savings]"
-    }
+def build_graph():
+    model = init_chat_model(MODEL_NAME, temperature=MODEL_TEMPERATURE)
 
-    # result = technical_agent.invoke({
-    #     "messages": [HumanMessage(content=f"Please provide a technical summary of the following conversation:\n\n{state['conversation']}")]
-    # })
-    # return {"technical_summary": result["messages"][-1].content}
+    emotional_agent = create_agent(model=model, system_prompt=EMOTIONAL_SUMMARY_PROMPT)
+    technical_agent = create_agent(model=model, system_prompt=TECHNICAL_SUMMARY_PROMPT)
 
+    def load_conversation_node(state: SummaryState) -> dict:
+        return {"conversation": read_file(INPUT_FILE_PATH)}
 
-def write_output_node(state: SummaryState) -> dict:
-    write_file(
-        OUTPUT_FILE_PATH,
-        format_summary(state["emotional_summary"], state["technical_summary"]),
+    def emotional_summary_node(state: SummaryState) -> dict:
+        return {
+            "emotional_summary": generate_summary_with_agent(
+                emotional_agent,
+                state["conversation"],
+            )
+        }
+
+    def technical_summary_node(state: SummaryState) -> dict:
+        if TECHNICAL_DISABLED:
+            return {"technical_summary": "[Technical summary is disabled]"}
+        return {
+            "technical_summary": generate_summary_with_agent(
+                technical_agent,
+                state["conversation"],
+            )
+        }
+
+    def write_output_node(state: SummaryState) -> dict:
+        formatted_summary = format_summary(
+            state["emotional_summary"], state["technical_summary"]
+        )
+
+        write_file(OUTPUT_FILE_PATH, formatted_summary)
+
+        return (
+            {"messages": [AIMessage(content=formatted_summary)]}
+            if PRINT_SUMMARY_IN_CHAT
+            else {}
+        )
+
+    return (
+        StateGraph(SummaryState)
+        # Nodes
+        .add_node("load_conversation", load_conversation_node)
+        .add_node("emotional_summary", emotional_summary_node)
+        .add_node("technical_summary", technical_summary_node)
+        .add_node("write_output", write_output_node)
+        # Edges
+        .add_edge(START, "load_conversation")
+        .add_edge("load_conversation", "emotional_summary")
+        .add_edge("load_conversation", "technical_summary")
+        .add_edge("emotional_summary", "write_output")
+        .add_edge("technical_summary", "write_output")
+        .add_edge("write_output", END)
+        # Compile
+        .compile()
     )
-    return {}
 
 
-graph = (
-    StateGraph(SummaryState)
-    .add_node("load_conversation", load_conversation_node)
-    .add_node("emotional_summary", emotional_summary_node)
-    .add_node("technical_summary", technical_summary_node)
-    .add_node("write_output", write_output_node)
-    .add_edge(START, "load_conversation")
-    .add_edge("load_conversation", "emotional_summary")
-    .add_edge("load_conversation", "technical_summary")
-    .add_edge("emotional_summary", "write_output")
-    .add_edge("technical_summary", "write_output")
-    .add_edge("write_output", END)
-    .compile()
-)
+graph = build_graph()
