@@ -1,5 +1,3 @@
-"""System prompts for summarization agents."""
-
 from src.agents.walkandlearn_summary.io import read_file
 from pathlib import Path
 
