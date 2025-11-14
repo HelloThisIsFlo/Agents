@@ -1,6 +1,13 @@
 """LangGraph agent for summarizing conversations with emotional and technical summaries."""
 
-from pathlib import Path
+from src.agents.walkandlearn_summary.config import (
+    MODEL_NAME,
+    MODEL_TEMPERATURE,
+    TECHNICAL_DISABLED,
+    PRINT_SUMMARY_IN_CHAT,
+    INPUT_FILE_PATH,
+    OUTPUT_FILE_PATH,
+)
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage
@@ -11,17 +18,6 @@ from src.agents.walkandlearn_summary.prompts import (
     EMOTIONAL_SUMMARY_PROMPT,
     TECHNICAL_SUMMARY_PROMPT,
 )
-
-PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-
-MODEL_NAME = "gpt-5-nano"
-MODEL_NAME = "gpt-5"
-MODEL_TEMPERATURE = 0
-TECHNICAL_DISABLED = False
-PRINT_SUMMARY_IN_CHAT = True
-
-INPUT_FILE_PATH = PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / "input.md"
-OUTPUT_FILE_PATH = PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / "output.md"
 
 
 class SummaryState(MessagesState):
