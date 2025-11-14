@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from src.agents.walkandlearn_summary.models import get_model_by_name
 
@@ -35,7 +36,7 @@ MODELS = {
     },
 }
 
-CONFIG_ARCHETYPES = {
+CONFIG_TEMPLATES = {
     "main": {
         "wip": False,
         "models": MODELS["main"],
@@ -51,6 +52,10 @@ CONFIG_ARCHETYPES = {
     "thinking": {
         "wip": False,
         "models": MODELS["thinking"],
+    },
+    "gemini-fast-nowip": {
+        "wip": False,
+        "models": MODELS["gemini-nano"],
     },
     "wip": {
         "wip": True,
@@ -70,25 +75,38 @@ CONFIG_ARCHETYPES = {
 ########################################################
 # CONFIG
 ########################################################
-CONFIG = CONFIG_ARCHETYPES["wip-gemini"]
+# CONFIG_TEMPLATE = "main"
+CONFIG_TEMPLATE = "gemini-fast-nowip"
+CONFIG_TEMPLATE = "wip-gemini"
+INPUT_FILENAME = "input-shap.md"
 
 
 ########################################################
 # CONFIG VALUES
 ########################################################
+CONFIG = CONFIG_TEMPLATES[CONFIG_TEMPLATE]
 WIP_MODE = CONFIG["wip"]
 TECHNICAL_DISABLED = False
 
 MODELS = CONFIG["models"]
 PRINT_SUMMARY_IN_CHAT = True
 
-INPUT_FILENAME = "input-wip.md" if WIP_MODE else "input.md"
+INPUT_FILENAME = "input-wip.md" if WIP_MODE else INPUT_FILENAME
 OUTPUT_FILENAME = "output-wip.md" if WIP_MODE else "output.md"
 INPUT_FILE_PATH = PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / INPUT_FILENAME
 OUTPUT_FILE_PATH = (
     PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / OUTPUT_FILENAME
 )
-OUTPUT_FILE_PATH_OCTARINE = (
-    Path("/Users/flo/Work/Private/PKM/Octarine/Sandbox/Walk & Learn/Debug Output")
-    / OUTPUT_FILENAME
+OUTPUT_FILE_PATH_OCTARINE_BASE = Path(
+    "/Users/flo/Work/Private/PKM/Octarine/Sandbox/Walk & Learn/Debug Output"
 )
+
+
+def get_output_file_path_octarine() -> Path:
+    """Generate dynamic filename for octarine: output-{config_template}-{MM-DD-HH:MM}.md"""
+    time_str = datetime.now().strftime("%H:%M_%m-%d")
+    octarine_filename = f"{CONFIG_TEMPLATE}_{time_str}.md"
+    return OUTPUT_FILE_PATH_OCTARINE_BASE / octarine_filename
+
+
+OUTPUT_FILE_PATH_OCTARINE = get_output_file_path_octarine()

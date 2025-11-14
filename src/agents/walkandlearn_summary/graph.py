@@ -6,7 +6,7 @@ from src.agents.walkandlearn_summary.config import (
     PRINT_SUMMARY_IN_CHAT,
     INPUT_FILE_PATH,
     OUTPUT_FILE_PATH,
-    OUTPUT_FILE_PATH_OCTARINE,
+    get_output_file_path_octarine,
 )
 from langchain.agents import create_agent
 from langchain_core.messages import AIMessage, HumanMessage
@@ -78,7 +78,7 @@ def build_graph():
         )
 
         write_file(OUTPUT_FILE_PATH, formatted_summary)
-        write_file(OUTPUT_FILE_PATH_OCTARINE, formatted_summary_octarine)
+        write_file(get_output_file_path_octarine(), formatted_summary_octarine)
 
         return (
             {"messages": [AIMessage(content=formatted_summary)]}
