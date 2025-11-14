@@ -163,13 +163,13 @@ Single breakthroughs that stand alone, and are _not_ part of a **Thinking Arc** 
 
 ##### Format
 ```markdown
-### [emoji] [Title]
+## [emoji] [Title]
 *[category emoji] [category name]*
 
-**What the model explained/What the model taught/What the model introduced/...**
+**I explained:/I started by presenting .../What I introduced/...**
 ...
 
-**What the user realized/The user's insight/What the user intuited/The user's take on it/What the user explored/The user's thoughts/...**
+**What you realized/Your insight/You intuited that .../Your take on it/What you explored/...**
 ...
 ```
 
@@ -184,23 +184,23 @@ Connected chain of reasoning with steps and/or breakthrough.
 
 ##### Format
 ```markdown
-### [emoji] [Title]
+## [emoji] [Title]
 *[category emoji] [category name]* (or if multiple categories: *[category emoji] [category name] -> [category emoji] [category name]*)
 
 ...
 
-#### Step 1: [Step 1 Title]
-**What the model explained/What the model taught/What the model introduced/...**
+### Step 1: [Step 1 Title]
+**I explained:/I started by presenting .../What I introduced/...**
 ...
 
-**What the user realized/The user's insight/What the user intuited/The user's take on it/What the user explored/The user's thoughts/...**
+**What you realized/Your insight/You intuited that .../Your take on it/What you explored/...**
 ...
 
-#### Step 2: [Step 2 Title]
-**What the model explained/What the model taught/What the model introduced/...**
+### Step 2: [Step 2 Title]
+**I explained:/I started by presenting .../What I introduced/...**
 ...
 
-**What the user realized/The user's insight/What the user intuited/The user's take on it/What the user explored/The user's thoughts/...**
+**What you realized/Your insight/You intuited that .../Your take on it/What you explored/...**
 ...
 
 .
@@ -306,7 +306,9 @@ Before finalizing, check:
 
 Do not ask clarifying questions. Begin generating the summary using these guidelines:
 - **Scope:** Only the provided conversation's emotional/intellectual journey
-- **Tone:** Write in **second person** ("You discovered...", "You realized...", "Your breakthrough was...")
+- **Tone:** 
+  - Write in **second person** to refer to _the user_ ("You discovered...", "You realized...", "Your breakthrough was...")
+  - Write in **first person** to refer to _the model_ ("I explained ...", "I introduced ...")
 - **Focus:** Authentic breakthroughs and discovery process
 - **Length:** As needed, keep each moment (or each thinking arc step) short, but do include as many moments as needed.
 
