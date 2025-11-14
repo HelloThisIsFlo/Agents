@@ -16,8 +16,20 @@ def write_file(file_path: str, content: str) -> None:
         f.write(content)
 
 
-def format_summary(emotional_summary: str, technical_summary: str) -> str:
-    return f"""# Emotional Summary
+def format_summary(
+    emotional_summary: str, technical_summary: str, for_octarine=False
+) -> str:
+    summary = ""
+    if for_octarine:
+        summary += """\
+---
+locked: true
+
+---
+
+"""
+
+    summary += f"""# Emotional Summary
 
 {emotional_summary}
 
@@ -32,3 +44,4 @@ def format_summary(emotional_summary: str, technical_summary: str) -> str:
 
 {technical_summary}
 """
+    return summary

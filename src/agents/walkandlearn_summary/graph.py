@@ -7,6 +7,7 @@ from src.agents.walkandlearn_summary.config import (
     PRINT_SUMMARY_IN_CHAT,
     INPUT_FILE_PATH,
     OUTPUT_FILE_PATH,
+    OUTPUT_FILE_PATH_OCTARINE,
 )
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
@@ -70,8 +71,12 @@ def build_graph():
         formatted_summary = format_summary(
             state["emotional_summary"], state["technical_summary"]
         )
+        formatted_summary_octarine = format_summary(
+            state["emotional_summary"], state["technical_summary"], for_octarine=True
+        )
 
         write_file(OUTPUT_FILE_PATH, formatted_summary)
+        write_file(OUTPUT_FILE_PATH_OCTARINE, formatted_summary_octarine)
 
         return (
             {"messages": [AIMessage(content=formatted_summary)]}
