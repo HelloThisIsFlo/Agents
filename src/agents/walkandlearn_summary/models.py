@@ -1,24 +1,119 @@
+from re import M
 import pandas as pd
+from langchain.chat_models import init_chat_model
 
 # Where to find models
 # - https://platform.openai.com/docs/pricing
 
+USING_GOOGLE_VERTEXAI = False
+
 MODELS_DF = pd.DataFrame(
     [
-        ("GPT 5-nano", "gpt-5-nano", "OpenAI", "nano"),
-        ("GPT 5-mini", "gpt-5-mini", "OpenAI", "mini"),
-        ("GPT 5", "gpt-5", "OpenAI", "main"),
-        ("GPT 5.1", "gpt-5.1", "OpenAI", "main"),
-        ("GPT 5.1-chat", "gpt-5.1-chat-latest", "OpenAI", "main"),
-        ("GPT 5-chat", "gpt-5-chat-latest", "OpenAI", "main"),
-        ("Sonnet 4.5", "claude-sonnet-4-5", "Anthropic", "main"),
-        ("Haiku 4.5", "claude-haiku-4-5", "Anthropic", "mini"),
-        ("Opus 4.1", "claude-opus-4-1", "Anthropic", "main"),
-        ("Gemini 2.5 Pro", "gemini-2.5-pro", "Google", "main"),
-        ("Gemini 2.5 Flash", "gemini-2.5-flash", "Google", "mini"),
-        ("Gemini 2.5 Flash Lite", "gemini-2.5-flash-lite", "Google", "nano"),
+        (
+            "GPT 5-nano",
+            "gpt-5-nano",
+            "OpenAI",
+            "nano",
+            "openai",
+            1.0,
+        ),
+        (
+            "GPT 5-mini",
+            "gpt-5-mini",
+            "OpenAI",
+            "mini",
+            "openai",
+            1.0,
+        ),
+        (
+            "GPT 5",
+            "gpt-5",
+            "OpenAI",
+            "main",
+            "openai",
+            1.0,
+        ),
+        (
+            "GPT 5.1",
+            "gpt-5.1",
+            "OpenAI",
+            "main",
+            "openai",
+            1.0,
+        ),
+        (
+            "GPT 5.1-chat",
+            "gpt-5.1-chat-latest",
+            "OpenAI",
+            "main",
+            "openai",
+            1.0,
+        ),
+        (
+            "GPT 5-chat",
+            "gpt-5-chat-latest",
+            "OpenAI",
+            "main",
+            "openai",
+            1.0,
+        ),
+        (
+            "Sonnet 4.5",
+            "claude-sonnet-4-5",
+            "Anthropic",
+            "main",
+            "anthropic",
+            1.0,
+        ),
+        (
+            "Haiku 4.5",
+            "claude-haiku-4-5",
+            "Anthropic",
+            "mini",
+            "anthropic",
+            1.0,
+        ),
+        (
+            "Opus 4.1",
+            "claude-opus-4-1",
+            "Anthropic",
+            "main",
+            "anthropic",
+            1.0,
+        ),
+        (
+            "Gemini 2.5 Pro",
+            "gemini-2.5-pro",
+            "Google",
+            "main",
+            "google_vertexai" if USING_GOOGLE_VERTEXAI else "google_genai",
+            1.0,
+        ),
+        (
+            "Gemini 2.5 Flash",
+            "gemini-2.5-flash",
+            "Google",
+            "mini",
+            "google_vertexai" if USING_GOOGLE_VERTEXAI else "google_genai",
+            1.0,
+        ),
+        (
+            "Gemini 2.5 Flash Lite",
+            "gemini-2.5-flash-lite",
+            "Google",
+            "nano",
+            "google_vertexai" if USING_GOOGLE_VERTEXAI else "google_genai",
+            1.0,
+        ),
     ],
-    columns=["friendly_name", "slug", "provider", "type"],
+    columns=[
+        "friendly_name",
+        "slug",
+        "provider",
+        "type",
+        "langchain_provider",
+        "temperature",
+    ],
 )
 
 
@@ -41,9 +136,26 @@ def print_available_models():
             print(f"  - {friendly_name}")
 
 
-def get_model_by_name(name: str) -> str:
+def get_model_by_name(name: str, temp: float | None = None):
+    """
+    Get a LangChain chat model by friendly name.
+
+    Args:
+        name: Friendly name of the model (e.g., "Sonnet 4.5", "GPT 5-nano")
+        temp: Temperature setting for the model. If None, uses the value from the DataFrame.
+
+    Returns:
+        LangChain chat model instance
+    """
     try:
-        return MODELS_DF[MODELS_DF["friendly_name"] == name]["slug"].values[0]
+        row = MODELS_DF[MODELS_DF["friendly_name"] == name].iloc[0]
+        slug = row["slug"]
+        provider = row["langchain_provider"]
+
+        if temp is None:
+            temp = row["temperature"]
+
+        return init_chat_model(model=slug, model_provider=provider, temperature=temp)
     except IndexError:
         raise ValueError(f"Model {name} not found")
 

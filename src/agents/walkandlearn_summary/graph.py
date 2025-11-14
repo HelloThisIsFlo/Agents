@@ -1,8 +1,7 @@
 """LangGraph agent for summarizing conversations with emotional and technical summaries."""
 
 from src.agents.walkandlearn_summary.config import (
-    MODEL_NAME,
-    MODEL_TEMPERATURE,
+    MODELS,
     TECHNICAL_DISABLED,
     PRINT_SUMMARY_IN_CHAT,
     INPUT_FILE_PATH,
@@ -10,7 +9,6 @@ from src.agents.walkandlearn_summary.config import (
     OUTPUT_FILE_PATH_OCTARINE,
 )
 from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph import StateGraph, START, END, MessagesState
 
@@ -41,10 +39,14 @@ def generate_summary_with_agent(agent, conversation: str) -> str:
 
 
 def build_graph():
-    model = init_chat_model(MODEL_NAME, temperature=MODEL_TEMPERATURE)
-
-    emotional_agent = create_agent(model=model, system_prompt=EMOTIONAL_SUMMARY_PROMPT)
-    technical_agent = create_agent(model=model, system_prompt=TECHNICAL_SUMMARY_PROMPT)
+    emotional_agent = create_agent(
+        model=MODELS["emotional"],
+        system_prompt=EMOTIONAL_SUMMARY_PROMPT,
+    )
+    technical_agent = create_agent(
+        model=MODELS["technical"],
+        system_prompt=TECHNICAL_SUMMARY_PROMPT,
+    )
 
     def load_conversation_node(state: SummaryState) -> dict:
         return {"conversation": read_file(INPUT_FILE_PATH)}
