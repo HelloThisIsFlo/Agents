@@ -6,17 +6,21 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
 
 MODELS = {
-    "main": {
+    "gpt-5.1": {
         "emotional": get_model_by_name("GPT 5.1", temp=1.0),
         "technical": get_model_by_name("GPT 5.1", temp=0.7),
     },
-    "gpt-chat": {
+    "gpt-5.1-chat": {
         "emotional": get_model_by_name("GPT 5.1-chat", temp=1.0),
         "technical": get_model_by_name("GPT 5.1-chat", temp=0.7),
     },
-    "main-claude": {
+    "claude-sonnet-4.5": {
         "emotional": get_model_by_name("Sonnet 4.5", temp=1.0),
         "technical": get_model_by_name("Sonnet 4.5", temp=0.7),
+    },
+    "gemini-pro": {
+        "emotional": get_model_by_name("Gemini 2.5 Pro", temp=1.0),
+        "technical": get_model_by_name("Gemini 2.5 Pro", temp=0.7),
     },
     "gpt-nano": {
         "emotional": get_model_by_name("GPT 5-nano", temp=1.0),
@@ -37,17 +41,21 @@ MODELS = {
 }
 
 CONFIG_TEMPLATES = {
-    "main": {
+    "main-gpt": {
         "wip": False,
-        "models": MODELS["main"],
+        "models": MODELS["gpt-5.1"],
     },
-    "gpt-chat": {
+    "main-gpt-chat": {
         "wip": False,
-        "models": MODELS["gpt-chat"],
+        "models": MODELS["gpt-5.1-chat"],
     },
     "main-claude": {
         "wip": False,
-        "models": MODELS["main-claude"],
+        "models": MODELS["claude-sonnet-4.5"],
+    },
+    "main-gemini": {
+        "wip": False,
+        "models": MODELS["gemini-pro"],
     },
     "thinking": {
         "wip": False,
@@ -76,9 +84,14 @@ CONFIG_TEMPLATES = {
 # CONFIG
 ########################################################
 # CONFIG_TEMPLATE = "main"
-CONFIG_TEMPLATE = "gemini-fast-nowip"
-CONFIG_TEMPLATE = "wip-gemini"
-INPUT_FILENAME = "input-shap.md"
+# CONFIG_TEMPLATE = "wip-gemini"
+# CONFIG_TEMPLATE = "main-gpt"
+# CONFIG_TEMPLATE = "main-claude"
+CONFIG_TEMPLATE = "main-gemini"
+
+INPUT_FILENAME = "input.md"
+# INPUT_FILENAME = "input-shap.md"
+# INPUT_FILENAME = "input-hessian.md"
 
 
 ########################################################
@@ -86,7 +99,7 @@ INPUT_FILENAME = "input-shap.md"
 ########################################################
 CONFIG = CONFIG_TEMPLATES[CONFIG_TEMPLATE]
 WIP_MODE = CONFIG["wip"]
-TECHNICAL_DISABLED = False
+TECHNICAL_DISABLED = True
 
 MODELS = CONFIG["models"]
 PRINT_SUMMARY_IN_CHAT = True
@@ -103,8 +116,7 @@ OUTPUT_FILE_PATH_OCTARINE_BASE = Path(
 
 
 def get_output_file_path_octarine() -> Path:
-    """Generate dynamic filename for octarine: output-{config_template}-{MM-DD-HH:MM}.md"""
-    time_str = datetime.now().strftime("%H:%M_%m-%d")
+    time_str = datetime.now().strftime("%H:%M:%S_%m-%d")
     octarine_filename = f"{CONFIG_TEMPLATE}_{time_str}.md"
     return OUTPUT_FILE_PATH_OCTARINE_BASE / octarine_filename
 
