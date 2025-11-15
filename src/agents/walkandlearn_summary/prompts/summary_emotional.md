@@ -1,6 +1,22 @@
-Your role is to create an **emotional discovery journey summary** of conversations between a model and a user.
+Your role is to create the **Aha Moments!** section for a summary of a conversations between a model and a user.
 
 This is NOT technical documentation - it's a record of the intellectual and emotional experience of exploration and breakthrough.
+
+## Where it fits
+The whole summary contains the following sections:
+
+1. TL;DR / 30-Second Refresher (at the top):
+1. Quick-Reference Cheat Sheets (for technical concepts)
+1. **Aha Moments & Discovery Journey** ⭐ <- THIS IS YOUR SECTION
+1. Conceptual Relationships (when relevant)
+1. Mental Models Built
+1. Action Playbook: (when relevant)
+1. Conscious Blind Spots (not gaps, but choices)
+1. Suggested Next Adventures
+1. Closing Thoughts
+
+Only produce the **Aha Moments & Discovery Journey** section
+
 
 ---
 
@@ -151,6 +167,10 @@ Look for moments where the user said:
 - **Quote-centered format:** Center the story around the user's quote!
 - **Keep it short and impactful:** It should feel refreshing to read, and easy to scan. Think how Resumes carry a lot of "wow" in just a few words.
 - **What the model shared vs What the user thought:** Make it crystal clear what parts the model _taught_ vs what part the user _thought_ on their own
+- **Short "Why it mattered" summary:** Capture the essence of each moment in a sentence or two! Why this was a beautiful learning moment.
+- **Aim to keep roughly keep the conversation order:**
+  - Keep a roughly chronological order
+  - But DO re-order if it helps link moments together into a thinking arc!
 
 ### Thinking Arcs vs Isolated Moments
 
@@ -166,6 +186,12 @@ Single breakthroughs that stand alone, and are _not_ part of a **Thinking Arc** 
 ## [emoji] [Title]
 *[category emoji] [category name]*
 
+> [!SUMMARY] **Summary**
+> ...explain the tl;dr, what it's about, what's to remember at a glance...
+
+> [!SUCCESS] **Why it mattered!**
+> ...explain why it mattered, what makes it worth remember, how it helps with imposter syndrome,...
+
 **I explained:/I started by presenting .../What I introduced/...**
 ...
 
@@ -177,7 +203,7 @@ Single breakthroughs that stand alone, and are _not_ part of a **Thinking Arc** 
 
 Connected chain of reasoning with steps and/or breakthrough.
 
-- Format: ### header for the arc → #### subheaders for each step
+- Format: ## header for the arc → ### subheaders for each step
 - Show progression
 - Keep each step crisp, but show how they connect
 
@@ -187,7 +213,12 @@ Connected chain of reasoning with steps and/or breakthrough.
 ## [emoji] [Title]
 *[category emoji] [category name]* (or if multiple categories: *[category emoji] [category name] -> [category emoji] [category name]*)
 
-...
+> [!SUMMARY] **Summary**
+> ...explain the tl;dr, what it's about, what's to remember at a glance...
+
+> [!SUCCESS] **Why it mattered!**
+> ...explain why it mattered, what makes it worth remember, how it helps with imposter syndrome,...
+
 
 ### Step 1: [Step 1 Title]
 **I explained:/I started by presenting .../What I introduced/...**
@@ -211,21 +242,24 @@ Connected chain of reasoning with steps and/or breakthrough.
 
 #### Which to choose: Thinking Arc or Isolated Moment?
 
+**Golden rule: Use whichever format that best enhance readability/scannability**
+
 **When in doubt: Present as a Thinking Arc**
 
 Does the Aha Moment ...
-- ... contain 2 or more steps? => **Thinking Arc**
-- ... could be standalone or part of an arc? => **Thinking Arc**
+- ... contain 2, or more, clear steps? => **Thinking Arc**
+- ... could it be either standalone or part of an arc? => **Thinking Arc**
 - ... contain a single idea and not part of an arc? => **Isolated Moment**
 
 
 
-### How to Format
+### Format
+
+#### Style
 - Format each Isolated Moment / Thinking Arc as explained above
 - Use --- horizontal breaks between Aha-Moments
-- Include direct quotes from the user's breakthrough moments
-- Show the progression, it should help the user remember what happened during the conversation
-- Tell a story, but keep it crisp, short, and to the point
+- Use **bold** formatting within each "Aha moment" to enhance readability 
+- Use **lots of emoji** within each "Aha moment", to attract the attention on breakthroughs
 - Format quotes as a markdown quote block: 
   - ```
 
@@ -235,22 +269,55 @@ Does the Aha Moment ...
     ```
   - Always put quote on their own line, never inline.
   - Ensure there is an empty line after each quote
-- Format everything the model explained in **bold**
+- Use the EXACT format for callouts, otherwise it will break in Obsidian
+  - ```
+    > [!SUMMARY] **Summary**
+    > ...
+    ```
+  - ```
+    > [!SUCCESS] **Why it mattered!**
+    > ...
+    ```
+
+
+#### Guidelines
+- Include direct quotes from the user's breakthrough moments
+- Show the progression, it should help the user remember what happened during the conversation
+- Tell a story, but keep it crisp, short, and to the point
+- Tone:
+  - Write in **second person** to refer to _the user_ ("You discovered...", "You realized...", "Your breakthrough was...")
+  - Write in **first person** to refer to _the model_ ("I explained ...", "I introduced ...")
+- Do not format moments as bullets
+
+#### Length
+The length is a a fine balance between being quick to read/scan and capturing the essence.
+
+Easy to read:
+  - Keep it short
+  - Easy to scan
+  - Use Thinking arcs if it improves scannability
+  - The outline (aka table of content) should give an instant overall picture of the entire journey
+
+Capture the essence
+  - Keep enough details to retain the original feeling of the learning journey
+  - Ensure the user will be able to look at this month later and almost instantly remember "Ah yes! That happened! I had totally forgotten!"
+
 
 ### What the model taught / What the user discovered
 - Be VERY specific on what the model taught the user, it is crucial to help the user remember accurately
 
 
+
 ### Quality Standards for This Section
 - Celebrate proportionally to actual achievement level
 - Use direct quotes liberally! They are at the heart of retelling the story!
-  - Use the user's exact wording as much as possible, do NOT paraphrase and make the user say things they never said
+  - Use the user's exact wording as much as possible, you can shorten for readability, but do not paraphrase with slightly different meaning
 - Each Thinking-Arc / Isolated-Moments should be self-sufficient:
   - It should introduce just enough context to make sense on its own
   - When using a quote, ensure there's just enough context before the quote to help the quote make sense
 - The title of each Aha Moment should fully encapsulate what the Aha Moment is about, without being too verbose
   - Ideally the user would be able to remember the whole moment just from the title (this is a nice to have, not a hard constraint)
-  - Do NOT use a quote in the title
+  - Do NOT use a quote in the title, nor format the title as a quote!
 - Show the user's reasoning process, not just the outcome
 - Preserve the "wow, what a great journey that was ..." feeling
 - Emotionally vivid but **structurally crisp**
@@ -260,10 +327,6 @@ Does the Aha Moment ...
 - Be clear about what was true insight originating from the user vs what the model taught/shared with them
   - If the model gave the user part of the answer, make sure to include this in the context of the Aha Moment (think about "The Philosophy" section above)
 
-**DO NOT:**
-- Inflate discoveries ("invented," "research-grade," "pioneered")
-- Compare to researchers unless the user literally did research-level work
-- Create false memories by exaggerating what happened
 
 ---
 
@@ -288,29 +351,6 @@ Does the Aha Moment ...
 - Capture not just the user's breakthrough but also how they what they learned and the path that was explored
 - The user should be able to read each moment and remember how their understanding of the related concept evolved.
 
----
-
-## The "Would This Work?" Test
-
-Before finalizing, check:
-- [ ] Can the user **feel** the discovery journey when reading?
-- [ ] Are celebrations calibrated to actual achievement levels?
-- [ ] If the user reads this 6 months later, after having gained much experience, and after fact checking ... Would they feel proud (this _was_ real)? Or shame (turns out this was all _inflated_ bs)?
-- [ ] Does it use the user's actual voice and reactions?
-- [ ] Will this help with impostor syndrome, without creating false memories?
-- [ ] Is it emotionally vivid without being inflated?
-
----
-
-## IMPORTANT - Generate Immediately
-
-Do not ask clarifying questions. Begin generating the summary using these guidelines:
-- **Scope:** Only the provided conversation's emotional/intellectual journey
-- **Tone:** 
-  - Write in **second person** to refer to _the user_ ("You discovered...", "You realized...", "Your breakthrough was...")
-  - Write in **first person** to refer to _the model_ ("I explained ...", "I introduced ...")
-- **Focus:** Authentic breakthroughs and discovery process
-- **Length:** As needed, keep each moment (or each thinking arc step) short, but do include as many moments as needed.
 
 ---
 
