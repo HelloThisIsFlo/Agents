@@ -1,4 +1,3 @@
-from datetime import datetime
 from pathlib import Path
 from src.agents.walkandlearn_summary.models import get_model_by_name
 
@@ -84,15 +83,16 @@ CONFIG_TEMPLATES = {
 # CONFIG
 ########################################################
 # CONFIG_TEMPLATE = "main"
-# CONFIG_TEMPLATE = "wip-gemini"
+CONFIG_TEMPLATE = "wip-gemini"
 # CONFIG_TEMPLATE = "main-gpt"
-CONFIG_TEMPLATE = "main-claude"
+# CONFIG_TEMPLATE = "main-claude"
 # CONFIG_TEMPLATE = "main-gemini"
 EMOTIONAL_DISABLED = False
-TECHNICAL_DISABLED = True
+TECHNICAL_DISABLED = False
 
-INPUT_FILENAME = "input.md"
-# INPUT_FILENAME = "input-shap.md"
+# INPUT_FILENAME = "input.md"
+INPUT_FILENAME = "input-shap.md"
+
 # INPUT_FILENAME = "input-hessian.md"
 
 
@@ -105,21 +105,15 @@ WIP_MODE = CONFIG["wip"]
 MODELS = CONFIG["models"]
 PRINT_SUMMARY_IN_CHAT = True
 
+# Default input filename (can be overridden via graph state)
 INPUT_FILENAME = "input-wip.md" if WIP_MODE else INPUT_FILENAME
-OUTPUT_FILENAME = "output-wip.md" if WIP_MODE else "output.md"
-INPUT_FILE_PATH = PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / INPUT_FILENAME
-OUTPUT_FILE_PATH = (
-    PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / OUTPUT_FILENAME
-)
-OUTPUT_FILE_PATH_OCTARINE_BASE = Path(
+DEFAULT_INPUT_FILENAME = INPUT_FILENAME
+
+OUTPUT_FILE_PATH_OBSIDIAN_BASE = Path(
     "/Users/flo/Work/Private/PKM/Octarine/Sandbox/Walk & Learn/Debug Output"
 )
 
 
-def get_output_file_path_octarine() -> Path:
-    time_str = datetime.now().strftime("%H:%M:%S_%m-%d")
-    octarine_filename = f"{CONFIG_TEMPLATE}_{time_str}.md"
-    return OUTPUT_FILE_PATH_OCTARINE_BASE / octarine_filename
-
-
-OUTPUT_FILE_PATH_OCTARINE = get_output_file_path_octarine()
+def get_input_file_path(filename: str) -> Path:
+    """Get the full path to an input file given its filename."""
+    return PROJECT_ROOT / "agent_files" / "walkandlearn_summary" / filename

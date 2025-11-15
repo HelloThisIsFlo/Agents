@@ -1,47 +1,38 @@
 """File I/O utilities for the summarization workflow."""
 
+from datetime import datetime
 from pathlib import Path
+from typing import Union
 
 
-def read_file(file_path: str) -> str:
+def get_frontmatter(
+    config_template: str, dt: datetime, input_filename: str, summary_type: str
+) -> str:
+    """Generate frontmatter with config template, generated_at timestamp, input filename, and summary type."""
+    generated_at = dt.strftime("%Y-%m-%dT%H:%M:%S")
+
+    return f"""---
+locked: true
+config_template: {config_template}
+generated_at: {generated_at}
+input_file: {input_filename}
+summary_type: {summary_type}
+
+---
+
+"""
+
+
+def read_file(file_path: Union[Path, str]) -> str:
     try:
-        with open(Path(file_path), "r", encoding="utf-8") as f:
+        path = Path(file_path) if isinstance(file_path, str) else file_path
+        with open(path, "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
         return f"File not found: {file_path}. Please set the correct file path in the configuration constants."
 
 
-def write_file(file_path: str, content: str) -> None:
-    with open(Path(file_path), "w", encoding="utf-8") as f:
+def write_file(file_path: Union[Path, str], content: str) -> None:
+    path = Path(file_path) if isinstance(file_path, str) else file_path
+    with open(path, "w", encoding="utf-8") as f:
         f.write(content)
-
-
-def format_summary(
-    emotional_summary: str, technical_summary: str, for_octarine=False
-) -> str:
-    summary = ""
-    if for_octarine:
-        summary += """\
----
-locked: true
-
----
-
-"""
-
-    summary += f"""# Emotional Summary
-
-{emotional_summary}
-
-
-
-================================================================
-================================================================
-
-
-
-# Technical Summary
-
-{technical_summary}
-"""
-    return summary
