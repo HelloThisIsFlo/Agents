@@ -1,6 +1,7 @@
 """LangGraph agent for summarizing conversations with emotional and technical summaries."""
 
-from typing import Optional
+import operator
+from typing import Annotated, Optional
 from src.agents.walkandlearn_summary.config import (
     MODELS,
     EMOTIONAL_DISABLED,
@@ -21,12 +22,21 @@ from src.agents.walkandlearn_summary.prompts import (
     TECHNICAL_SUMMARY_PROMPT,
 )
 
+# Number of iterations for each summary type
+NUM_EMOTIONAL_ITERATIONS = 3
+NUM_TECHNICAL_ITERATIONS = 3
+
+
+def keep_last_value(left: Optional[str], right: Optional[str]) -> Optional[str]:
+    """Reducer that keeps the last non-None value."""
+    return right if right is not None else left
+
 
 class SummaryState(MessagesState):
-    input_filename: Optional[str]
-    conversation: str
-    emotional_summary: str
-    technical_summary: str
+    input_filename: Annotated[Optional[str], keep_last_value]
+    conversation: Annotated[str, keep_last_value]
+    emotional_summaries: Annotated[list[str], operator.add]
+    technical_summaries: Annotated[list[str], operator.add]
 
 
 def generate_summary_with_agent(agent, conversation: str) -> str:
@@ -42,42 +52,61 @@ def generate_summary_with_agent(agent, conversation: str) -> str:
     return result["messages"][-1].content
 
 
-def build_graph():
-    emotional_agent = create_agent(
-        model=MODELS["emotional"],
-        system_prompt=EMOTIONAL_SUMMARY_PROMPT,
-    )
-    technical_agent = create_agent(
-        model=MODELS["technical"],
-        system_prompt=TECHNICAL_SUMMARY_PROMPT,
-    )
+def build_summary_subgraph(
+    summary_type: str,
+    model,
+    system_prompt: str,
+    num_iterations: int,
+    is_disabled: bool,
+):
+    """Build a subgraph for generating summaries in parallel.
 
+    Args:
+        summary_type: "emotional" or "technical"
+        model: The model to use for the agent
+        system_prompt: The system prompt for the agent
+        num_iterations: Number of parallel iterations
+        is_disabled: Whether this summary type is disabled
+    """
+    agent = create_agent(model=model, system_prompt=system_prompt)
+    state_key = f"{summary_type}_summaries"
+
+    # Create dynamic summary nodes
+    def make_summary_node(index):
+        def summary_node(state: SummaryState) -> dict:
+            if is_disabled:
+                return {
+                    state_key: [
+                        f"[{summary_type.capitalize()} summary {index} is disabled]"
+                    ]
+                }
+            summary = generate_summary_with_agent(agent, state["conversation"])
+            return {state_key: [summary]}
+
+        return summary_node
+
+    # Build the subgraph
+    subgraph = StateGraph(SummaryState)
+
+    # Add all summary nodes
+    for i in range(num_iterations):
+        node_name = f"{summary_type}_{i}"
+        subgraph.add_node(node_name, make_summary_node(i))
+        subgraph.add_edge(START, node_name)
+        subgraph.add_edge(node_name, END)
+
+    return subgraph.compile()
+
+
+def build_graph():
     def load_conversation_node(state: SummaryState) -> dict:
         input_filename = state.get("input_filename") or DEFAULT_INPUT_FILENAME
         input_file_path = get_input_file_path(input_filename)
         return {
             "conversation": read_file(input_file_path),
             "input_filename": input_filename,
-        }
-
-    def emotional_summary_node(state: SummaryState) -> dict:
-        if EMOTIONAL_DISABLED:
-            return {"emotional_summary": "[Emotional summary is disabled]"}
-        return {
-            "emotional_summary": generate_summary_with_agent(
-                emotional_agent,
-                state["conversation"],
-            )
-        }
-
-    def technical_summary_node(state: SummaryState) -> dict:
-        if TECHNICAL_DISABLED:
-            return {"technical_summary": "[Technical summary is disabled]"}
-        return {
-            "technical_summary": generate_summary_with_agent(
-                technical_agent,
-                state["conversation"],
-            )
+            "emotional_summaries": [],
+            "technical_summaries": [],
         }
 
     def write_output_node(state: SummaryState) -> dict:
@@ -96,24 +125,33 @@ def build_graph():
         output_folder = OUTPUT_FILE_PATH_OBSIDIAN_BASE / filename_without_ext
         output_folder.mkdir(parents=True, exist_ok=True)
 
-        # Write emotional summary to emotional-{timestamp}.md with frontmatter
-        emotional_frontmatter = get_frontmatter(
-            CONFIG_TEMPLATE, now, input_filename, "emotional"
-        )
-        emotional_content = emotional_frontmatter + state["emotional_summary"]
-        emotional_file_path = output_folder / f"emotional__{timestamp}.md"
-        write_file(emotional_file_path, emotional_content)
+        # Write all emotional summaries
+        emotional_summaries = state.get("emotional_summaries", [])
+        for i, summary in enumerate(emotional_summaries):
+            emotional_frontmatter = get_frontmatter(
+                CONFIG_TEMPLATE, now, input_filename, "emotional"
+            )
+            emotional_content = emotional_frontmatter + summary
+            emotional_file_path = output_folder / f"emotional_{i}__{timestamp}.md"
+            write_file(emotional_file_path, emotional_content)
 
-        # Write technical summary to technical-{timestamp}.md with frontmatter
-        technical_frontmatter = get_frontmatter(
-            CONFIG_TEMPLATE, now, input_filename, "technical"
-        )
-        technical_content = technical_frontmatter + state["technical_summary"]
-        technical_file_path = output_folder / f"technical__{timestamp}.md"
-        write_file(technical_file_path, technical_content)
+        # Write all technical summaries
+        technical_summaries = state.get("technical_summaries", [])
+        for i, summary in enumerate(technical_summaries):
+            technical_frontmatter = get_frontmatter(
+                CONFIG_TEMPLATE, now, input_filename, "technical"
+            )
+            technical_content = technical_frontmatter + summary
+            technical_file_path = output_folder / f"technical_{i}__{timestamp}.md"
+            write_file(technical_file_path, technical_content)
 
-        # For chat output, combine both summaries
-        combined_summary = f"# Emotional Summary\n\n{state['emotional_summary']}\n\n\n\n# Technical Summary\n\n{state['technical_summary']}"
+        # For chat output, combine all summaries
+        combined_summary = "# Emotional Summaries\n\n"
+        for i, summary in enumerate(emotional_summaries):
+            combined_summary += f"## Iteration {i}\n\n{summary}\n\n"
+        combined_summary += "\n\n# Technical Summaries\n\n"
+        for i, summary in enumerate(technical_summaries):
+            combined_summary += f"## Iteration {i}\n\n{summary}\n\n"
 
         return (
             {"messages": [AIMessage(content=combined_summary)]}
@@ -121,23 +159,43 @@ def build_graph():
             else {}
         )
 
-    return (
-        StateGraph(SummaryState)
-        # Nodes
-        .add_node("load_conversation", load_conversation_node)
-        .add_node("emotional_summary", emotional_summary_node)
-        .add_node("technical_summary", technical_summary_node)
-        .add_node("write_output", write_output_node)
-        # Edges
-        .add_edge(START, "load_conversation")
-        .add_edge("load_conversation", "emotional_summary")
-        .add_edge("load_conversation", "technical_summary")
-        .add_edge("emotional_summary", "write_output")
-        .add_edge("technical_summary", "write_output")
-        .add_edge("write_output", END)
-        # Compile
-        .compile()
+    # Build the main graph
+    graph_builder = StateGraph(SummaryState)
+
+    # Add load conversation node
+    graph_builder.add_node("load_conversation", load_conversation_node)
+
+    # Add subgraphs
+    emotional_subgraph = build_summary_subgraph(
+        summary_type="emotional",
+        model=MODELS["emotional"],
+        system_prompt=EMOTIONAL_SUMMARY_PROMPT,
+        num_iterations=NUM_EMOTIONAL_ITERATIONS,
+        is_disabled=EMOTIONAL_DISABLED,
     )
+    technical_subgraph = build_summary_subgraph(
+        summary_type="technical",
+        model=MODELS["technical"],
+        system_prompt=TECHNICAL_SUMMARY_PROMPT,
+        num_iterations=NUM_TECHNICAL_ITERATIONS,
+        is_disabled=TECHNICAL_DISABLED,
+    )
+
+    graph_builder.add_node("emotional_summaries", emotional_subgraph)
+    graph_builder.add_node("technical_summaries", technical_subgraph)
+
+    # Add write output node
+    graph_builder.add_node("write_output", write_output_node)
+
+    # Connect the graph
+    graph_builder.add_edge(START, "load_conversation")
+    graph_builder.add_edge("load_conversation", "emotional_summaries")
+    graph_builder.add_edge("load_conversation", "technical_summaries")
+    graph_builder.add_edge("emotional_summaries", "write_output")
+    graph_builder.add_edge("technical_summaries", "write_output")
+    graph_builder.add_edge("write_output", END)
+
+    return graph_builder.compile()
 
 
 graph = build_graph()

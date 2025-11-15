@@ -17,6 +17,7 @@ config_template: {config_template}
 generated_at: {generated_at}
 input_file: {input_filename}
 summary_type: {summary_type}
+comments:
 
 ---
 
