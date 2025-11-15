@@ -2,6 +2,7 @@
 
 from src.agents.walkandlearn_summary.config import (
     MODELS,
+    EMOTIONAL_DISABLED,
     TECHNICAL_DISABLED,
     PRINT_SUMMARY_IN_CHAT,
     INPUT_FILE_PATH,
@@ -52,6 +53,8 @@ def build_graph():
         return {"conversation": read_file(INPUT_FILE_PATH)}
 
     def emotional_summary_node(state: SummaryState) -> dict:
+        if EMOTIONAL_DISABLED:
+            return {"emotional_summary": "[Emotional summary is disabled]"}
         return {
             "emotional_summary": generate_summary_with_agent(
                 emotional_agent,

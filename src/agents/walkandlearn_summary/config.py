@@ -86,8 +86,10 @@ CONFIG_TEMPLATES = {
 # CONFIG_TEMPLATE = "main"
 # CONFIG_TEMPLATE = "wip-gemini"
 # CONFIG_TEMPLATE = "main-gpt"
-# CONFIG_TEMPLATE = "main-claude"
-CONFIG_TEMPLATE = "main-gemini"
+CONFIG_TEMPLATE = "main-claude"
+# CONFIG_TEMPLATE = "main-gemini"
+EMOTIONAL_DISABLED = False
+TECHNICAL_DISABLED = True
 
 INPUT_FILENAME = "input.md"
 # INPUT_FILENAME = "input-shap.md"
@@ -99,7 +101,6 @@ INPUT_FILENAME = "input.md"
 ########################################################
 CONFIG = CONFIG_TEMPLATES[CONFIG_TEMPLATE]
 WIP_MODE = CONFIG["wip"]
-TECHNICAL_DISABLED = True
 
 MODELS = CONFIG["models"]
 PRINT_SUMMARY_IN_CHAT = True
