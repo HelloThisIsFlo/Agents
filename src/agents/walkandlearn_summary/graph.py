@@ -20,6 +20,7 @@ from src.agents.walkandlearn_summary.io import read_file, write_file, get_frontm
 from src.agents.walkandlearn_summary.prompts import (
     EMOTIONAL_SUMMARY_PROMPT,
     TECHNICAL_SUMMARY_PROMPT,
+    EVALUATION_PROMPT,
 )
 
 # Number of iterations for each summary type
@@ -27,7 +28,7 @@ NUM_EMOTIONAL_ITERATIONS = 3
 NUM_TECHNICAL_ITERATIONS = 3
 
 
-def keep_last_value(left: Optional[str], right: Optional[str]) -> Optional[str]:
+def keep_last_value(left, right):
     """Reducer that keeps the last non-None value."""
     return right if right is not None else left
 
@@ -37,6 +38,10 @@ class SummaryState(MessagesState):
     conversation: Annotated[str, keep_last_value]
     emotional_summaries: Annotated[list[str], operator.add]
     technical_summaries: Annotated[list[str], operator.add]
+    emotional_best_idx: Annotated[Optional[int], keep_last_value]
+    emotional_best_reasoning: Annotated[Optional[str], keep_last_value]
+    technical_best_idx: Annotated[Optional[int], keep_last_value]
+    technical_best_reasoning: Annotated[Optional[str], keep_last_value]
 
 
 def generate_summary_with_agent(agent, conversation: str) -> str:
@@ -58,6 +63,7 @@ def build_summary_subgraph(
     system_prompt: str,
     num_iterations: int,
     is_disabled: bool,
+    evaluation_model,
 ):
     """Build a subgraph for generating summaries in parallel.
 
@@ -67,8 +73,12 @@ def build_summary_subgraph(
         system_prompt: The system prompt for the agent
         num_iterations: Number of parallel iterations
         is_disabled: Whether this summary type is disabled
+        evaluation_model: The model to use for evaluation
     """
     agent = create_agent(model=model, system_prompt=system_prompt)
+    evaluation_agent = create_agent(
+        model=evaluation_model, system_prompt=EVALUATION_PROMPT
+    )
     state_key = f"{summary_type}_summaries"
 
     # Create dynamic summary nodes
@@ -85,6 +95,57 @@ def build_summary_subgraph(
 
         return summary_node
 
+    def wait_for_all_summaries_node(state: SummaryState) -> dict:
+        return {}
+
+    # Create evaluation node
+    def evaluation_node(state: SummaryState) -> dict:
+        if is_disabled:
+            return {
+                f"{summary_type}_best_idx": 0,
+                f"{summary_type}_best_reasoning": f"[{summary_type.capitalize()} evaluation disabled]",
+            }
+
+        summaries = state.get(state_key, [])
+        if not summaries:
+            return {
+                f"{summary_type}_best_idx": None,
+                f"{summary_type}_best_reasoning": "No summaries to evaluate",
+            }
+
+        # Format summaries for evaluation
+        formatted_summaries = "\n\n".join(
+            [f"Summary {i}:\n{summary}" for i, summary in enumerate(summaries)]
+        )
+
+        # Get evaluation from agent
+        evaluation_result = generate_summary_with_agent(
+            evaluation_agent, formatted_summaries
+        )
+
+        # Parse the evaluation result
+        best_idx = None
+        reasoning = evaluation_result
+
+        # Try to extract "Best summary: X" from the response
+        import re
+
+        match = re.search(r"Best summary:\s*(\d+)", evaluation_result, re.IGNORECASE)
+        if match:
+            best_idx = int(match.group(1))
+
+        # Try to extract reasoning
+        reasoning_match = re.search(
+            r"Reasoning:\s*(.+)", evaluation_result, re.IGNORECASE | re.DOTALL
+        )
+        if reasoning_match:
+            reasoning = reasoning_match.group(1).strip()
+
+        return {
+            f"{summary_type}_best_idx": best_idx,
+            f"{summary_type}_best_reasoning": reasoning,
+        }
+
     # Build the subgraph
     subgraph = StateGraph(SummaryState)
 
@@ -93,7 +154,13 @@ def build_summary_subgraph(
         node_name = f"{summary_type}_{i}"
         subgraph.add_node(node_name, make_summary_node(i))
         subgraph.add_edge(START, node_name)
-        subgraph.add_edge(node_name, END)
+        subgraph.add_edge(node_name, "wait_for_all_summaries")
+
+    subgraph.add_node("wait_for_all_summaries", wait_for_all_summaries_node)
+    subgraph.add_edge("wait_for_all_summaries", "evaluation")
+
+    subgraph.add_node("evaluation", evaluation_node)
+    subgraph.add_edge("evaluation", END)
 
     return subgraph.compile()
 
@@ -145,16 +212,42 @@ def build_graph():
             technical_file_path = output_folder / f"technical_{i}__{timestamp}.md"
             write_file(technical_file_path, technical_content)
 
-        # For chat output, combine all summaries
-        combined_summary = "# Emotional Summaries\n\n"
-        for i, summary in enumerate(emotional_summaries):
-            combined_summary += f"## Iteration {i}\n\n{summary}\n\n"
-        combined_summary += "\n\n# Technical Summaries\n\n"
-        for i, summary in enumerate(technical_summaries):
-            combined_summary += f"## Iteration {i}\n\n{summary}\n\n"
+        # Write evaluation file
+        evaluation_content = "# Emotional Summaries Evaluation\n\n"
+        evaluation_content += (
+            f"**Best Summary Index:** {state.get('emotional_best_idx', 'N/A')}\n\n"
+        )
+        evaluation_content += (
+            f"**Reasoning:**\n\n{state.get('emotional_best_reasoning', 'N/A')}\n\n"
+        )
+        evaluation_content += "---\n\n"
+        evaluation_content += "# Technical Summaries Evaluation\n\n"
+        evaluation_content += (
+            f"**Best Summary Index:** {state.get('technical_best_idx', 'N/A')}\n\n"
+        )
+        evaluation_content += (
+            f"**Reasoning:**\n\n{state.get('technical_best_reasoning', 'N/A')}\n\n"
+        )
+
+        evaluation_frontmatter = get_frontmatter(
+            CONFIG_TEMPLATE, now, input_filename, "evaluation"
+        )
+        evaluation_file_content = evaluation_frontmatter + evaluation_content
+        evaluation_file_path = output_folder / f"evaluation__{timestamp}.md"
+        write_file(evaluation_file_path, evaluation_file_content)
+
+        # For chat output, only show evaluation results
+        chat_output = "# Summary Evaluation Results\n\n"
+        chat_output += "## Emotional Summaries\n\n"
+        chat_output += f"**Best:** Summary {state.get('emotional_best_idx', 'N/A')}\n\n"
+        chat_output += f"**Why:** {state.get('emotional_best_reasoning', 'N/A')}\n\n"
+        chat_output += "---\n\n"
+        chat_output += "## Technical Summaries\n\n"
+        chat_output += f"**Best:** Summary {state.get('technical_best_idx', 'N/A')}\n\n"
+        chat_output += f"**Why:** {state.get('technical_best_reasoning', 'N/A')}\n\n"
 
         return (
-            {"messages": [AIMessage(content=combined_summary)]}
+            {"messages": [AIMessage(content=chat_output)]}
             if PRINT_SUMMARY_IN_CHAT
             else {}
         )
@@ -172,6 +265,7 @@ def build_graph():
         system_prompt=EMOTIONAL_SUMMARY_PROMPT,
         num_iterations=NUM_EMOTIONAL_ITERATIONS,
         is_disabled=EMOTIONAL_DISABLED,
+        evaluation_model=MODELS["evaluation"],
     )
     technical_subgraph = build_summary_subgraph(
         summary_type="technical",
@@ -179,6 +273,7 @@ def build_graph():
         system_prompt=TECHNICAL_SUMMARY_PROMPT,
         num_iterations=NUM_TECHNICAL_ITERATIONS,
         is_disabled=TECHNICAL_DISABLED,
+        evaluation_model=MODELS["evaluation"],
     )
 
     graph_builder.add_node("emotional_summaries", emotional_subgraph)

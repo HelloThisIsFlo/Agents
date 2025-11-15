@@ -8,34 +8,42 @@ MODELS = {
     "gpt-5.1": {
         "emotional": get_model_by_name("GPT 5.1", temp=1.0),
         "technical": get_model_by_name("GPT 5.1", temp=0.7),
+        "evaluation": get_model_by_name("GPT 5.1", temp=0.3),
     },
     "gpt-5.1-chat": {
         "emotional": get_model_by_name("GPT 5.1-chat", temp=1.0),
         "technical": get_model_by_name("GPT 5.1-chat", temp=0.7),
+        "evaluation": get_model_by_name("GPT 5.1-chat", temp=0.3),
     },
     "claude-sonnet-4.5": {
         "emotional": get_model_by_name("Sonnet 4.5", temp=1.0),
         "technical": get_model_by_name("Sonnet 4.5", temp=0.7),
+        "evaluation": get_model_by_name("Sonnet 4.5", temp=0.3),
     },
     "gemini-pro": {
         "emotional": get_model_by_name("Gemini 2.5 Pro", temp=1.0),
         "technical": get_model_by_name("Gemini 2.5 Pro", temp=0.7),
+        "evaluation": get_model_by_name("Gemini 2.5 Pro", temp=0.3),
     },
     "gpt-nano": {
         "emotional": get_model_by_name("GPT 5-nano", temp=1.0),
         "technical": get_model_by_name("GPT 5-nano", temp=0.7),
+        "evaluation": get_model_by_name("GPT 5-nano", temp=0.3),
     },
     "gemini-nano": {
         "emotional": get_model_by_name("Gemini 2.5 Flash Lite", temp=1.0),
         "technical": get_model_by_name("Gemini 2.5 Flash Lite", temp=0.7),
+        "evaluation": get_model_by_name("Gemini 2.5 Flash Lite", temp=0.3),
     },
     "thinking": {
         "emotional": get_model_by_name("Sonnet 4.5", temp=1.0),
         "technical": get_model_by_name("GPT 5-nano", temp=0.7),
+        "evaluation": get_model_by_name("Sonnet 4.5", temp=0.3),
     },
     "wip-thinking": {
         "emotional": get_model_by_name("GPT 5-nano", temp=1.0),
         "technical": get_model_by_name("GPT 5-nano", temp=0.7),
+        "evaluation": get_model_by_name("GPT 5-nano", temp=0.3),
     },
 }
 
