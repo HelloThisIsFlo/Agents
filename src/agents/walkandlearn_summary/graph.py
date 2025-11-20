@@ -16,9 +16,17 @@ from src.agents.walkandlearn_summary.config import (
     get_input_file_path,
 )
 from langchain.agents import create_agent
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage
 from langgraph.graph import StateGraph, START, END, MessagesState
 
+from src.agents.walkandlearn_summary.nodes.summary import (
+    generate_summary_with_agent,
+)
+from src.agents.walkandlearn_summary.nodes.evaluation import evaluate_summaries
+from src.agents.walkandlearn_summary.nodes.output import (
+    format_evaluation_file_content,
+    format_evaluation_chat_output,
+)
 from src.agents.walkandlearn_summary.io import read_file, write_file, get_frontmatter
 from src.agents.walkandlearn_summary.prompts import (
     EMOTIONAL_SUMMARY_PROMPT,
@@ -41,19 +49,6 @@ class SummaryState(MessagesState):
     emotional_best_reasoning: Annotated[Optional[str], keep_last_value]
     technical_best_idx: Annotated[Optional[int], keep_last_value]
     technical_best_reasoning: Annotated[Optional[str], keep_last_value]
-
-
-def generate_summary_with_agent(agent, conversation: str) -> str:
-    result = agent.invoke(
-        {
-            "messages": [
-                HumanMessage(
-                    content=f"Here is the conversation to summarize:\n\n{conversation}"
-                )
-            ]
-        }
-    )
-    return result["messages"][-1].content
 
 
 def build_summary_subgraph(
@@ -100,47 +95,13 @@ def build_summary_subgraph(
 
     # Create evaluation node
     def evaluation_node(state: SummaryState) -> dict:
-        if eval_disabled:
-            return {
-                f"{summary_type}_best_idx": 0,
-                f"{summary_type}_best_reasoning": f"[{summary_type.capitalize()} evaluation disabled]",
-            }
-
         summaries = state.get(state_key, [])
-        if not summaries:
-            return {
-                f"{summary_type}_best_idx": None,
-                f"{summary_type}_best_reasoning": "No summaries to evaluate",
-            }
-
-        # Format summaries for evaluation
-        formatted_summaries = "\n\n".join(
-            [f"Summary {i}:\n{summary}" for i, summary in enumerate(summaries)]
+        best_idx, reasoning = evaluate_summaries(
+            evaluation_agent=evaluation_agent,
+            summaries=summaries,
+            summary_type=summary_type,
+            eval_disabled=eval_disabled,
         )
-
-        # Get evaluation from agent
-        evaluation_result = generate_summary_with_agent(
-            evaluation_agent, formatted_summaries
-        )
-
-        # Parse the evaluation result
-        best_idx = None
-        reasoning = evaluation_result
-
-        # Try to extract "Best summary: X" from the response
-        import re
-
-        match = re.search(r"Best summary:\s*(\d+)", evaluation_result, re.IGNORECASE)
-        if match:
-            best_idx = int(match.group(1))
-
-        # Try to extract reasoning
-        reasoning_match = re.search(
-            r"Reasoning:\s*(.+)", evaluation_result, re.IGNORECASE | re.DOTALL
-        )
-        if reasoning_match:
-            reasoning = reasoning_match.group(1).strip()
-
         return {
             f"{summary_type}_best_idx": best_idx,
             f"{summary_type}_best_reasoning": reasoning,
@@ -213,20 +174,11 @@ def build_graph():
             write_file(technical_file_path, technical_content)
 
         # Write evaluation file
-        evaluation_content = "# Emotional Summaries Evaluation\n\n"
-        evaluation_content += (
-            f"**Best Summary Index:** {state.get('emotional_best_idx', 'N/A')}\n\n"
-        )
-        evaluation_content += (
-            f"**Reasoning:**\n\n{state.get('emotional_best_reasoning', 'N/A')}\n\n"
-        )
-        evaluation_content += "---\n\n"
-        evaluation_content += "# Technical Summaries Evaluation\n\n"
-        evaluation_content += (
-            f"**Best Summary Index:** {state.get('technical_best_idx', 'N/A')}\n\n"
-        )
-        evaluation_content += (
-            f"**Reasoning:**\n\n{state.get('technical_best_reasoning', 'N/A')}\n\n"
+        evaluation_content = format_evaluation_file_content(
+            emotional_best_idx=state.get("emotional_best_idx"),
+            emotional_reasoning=state.get("emotional_best_reasoning", "N/A"),
+            technical_best_idx=state.get("technical_best_idx"),
+            technical_reasoning=state.get("technical_best_reasoning", "N/A"),
         )
 
         evaluation_frontmatter = get_frontmatter(
@@ -237,14 +189,12 @@ def build_graph():
         write_file(evaluation_file_path, evaluation_file_content)
 
         # For chat output, only show evaluation results
-        chat_output = "# Summary Evaluation Results\n\n"
-        chat_output += "## Emotional Summaries\n\n"
-        chat_output += f"**Best:** Summary {state.get('emotional_best_idx', 'N/A')}\n\n"
-        chat_output += f"**Why:** {state.get('emotional_best_reasoning', 'N/A')}\n\n"
-        chat_output += "---\n\n"
-        chat_output += "## Technical Summaries\n\n"
-        chat_output += f"**Best:** Summary {state.get('technical_best_idx', 'N/A')}\n\n"
-        chat_output += f"**Why:** {state.get('technical_best_reasoning', 'N/A')}\n\n"
+        chat_output = format_evaluation_chat_output(
+            emotional_best_idx=state.get("emotional_best_idx"),
+            emotional_reasoning=state.get("emotional_best_reasoning", "N/A"),
+            technical_best_idx=state.get("technical_best_idx"),
+            technical_reasoning=state.get("technical_best_reasoning", "N/A"),
+        )
 
         return (
             {"messages": [AIMessage(content=chat_output)]}
