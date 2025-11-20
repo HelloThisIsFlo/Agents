@@ -3,8 +3,11 @@
 import operator
 from typing import Annotated, Optional
 from src.agents.walkandlearn_summary.config import (
+    EVAL_DISABLED,
     MODELS,
     EMOTIONAL_DISABLED,
+    NUM_EMOTIONAL_ITERATIONS,
+    NUM_TECHNICAL_ITERATIONS,
     TECHNICAL_DISABLED,
     PRINT_SUMMARY_IN_CHAT,
     CONFIG_TEMPLATE,
@@ -22,10 +25,6 @@ from src.agents.walkandlearn_summary.prompts import (
     TECHNICAL_SUMMARY_PROMPT,
     EVALUATION_PROMPT,
 )
-
-# Number of iterations for each summary type
-NUM_EMOTIONAL_ITERATIONS = 3
-NUM_TECHNICAL_ITERATIONS = 3
 
 
 def keep_last_value(left, right):
@@ -62,7 +61,8 @@ def build_summary_subgraph(
     model,
     system_prompt: str,
     num_iterations: int,
-    is_disabled: bool,
+    summary_disabled: bool,
+    eval_disabled: bool,
     evaluation_model,
 ):
     """Build a subgraph for generating summaries in parallel.
@@ -84,7 +84,7 @@ def build_summary_subgraph(
     # Create dynamic summary nodes
     def make_summary_node(index):
         def summary_node(state: SummaryState) -> dict:
-            if is_disabled:
+            if summary_disabled:
                 return {
                     state_key: [
                         f"[{summary_type.capitalize()} summary {index} is disabled]"
@@ -100,7 +100,7 @@ def build_summary_subgraph(
 
     # Create evaluation node
     def evaluation_node(state: SummaryState) -> dict:
-        if is_disabled:
+        if eval_disabled:
             return {
                 f"{summary_type}_best_idx": 0,
                 f"{summary_type}_best_reasoning": f"[{summary_type.capitalize()} evaluation disabled]",
@@ -264,7 +264,8 @@ def build_graph():
         model=MODELS["emotional"],
         system_prompt=EMOTIONAL_SUMMARY_PROMPT,
         num_iterations=NUM_EMOTIONAL_ITERATIONS,
-        is_disabled=EMOTIONAL_DISABLED,
+        summary_disabled=EMOTIONAL_DISABLED,
+        eval_disabled=EVAL_DISABLED,
         evaluation_model=MODELS["evaluation"],
     )
     technical_subgraph = build_summary_subgraph(
@@ -272,7 +273,8 @@ def build_graph():
         model=MODELS["technical"],
         system_prompt=TECHNICAL_SUMMARY_PROMPT,
         num_iterations=NUM_TECHNICAL_ITERATIONS,
-        is_disabled=TECHNICAL_DISABLED,
+        summary_disabled=TECHNICAL_DISABLED,
+        eval_disabled=EVAL_DISABLED,
         evaluation_model=MODELS["evaluation"],
     )
 

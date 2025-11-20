@@ -91,17 +91,21 @@ CONFIG_TEMPLATES = {
 # CONFIG
 ########################################################
 # CONFIG_TEMPLATE = "main"
-CONFIG_TEMPLATE = "wip-gemini"
+# CONFIG_TEMPLATE = "wip-gemini"
 # CONFIG_TEMPLATE = "main-gpt"
-# CONFIG_TEMPLATE = "main-claude"
+CONFIG_TEMPLATE = "main-claude"
 # CONFIG_TEMPLATE = "main-gemini"
+
 EMOTIONAL_DISABLED = False
 TECHNICAL_DISABLED = False
+EVAL_DISABLED = False
+
+NUM_EMOTIONAL_ITERATIONS = 2
+NUM_TECHNICAL_ITERATIONS = 3
 
 # INPUT_FILENAME = "input.md"
-INPUT_FILENAME = "input-shap.md"
-
-# INPUT_FILENAME = "input-hessian.md"
+# INPUT_FILENAME = "input-shap.md"
+INPUT_FILENAME = "input-hessian.md"
 
 
 ########################################################
@@ -117,8 +121,9 @@ PRINT_SUMMARY_IN_CHAT = True
 INPUT_FILENAME = "input-wip.md" if WIP_MODE else INPUT_FILENAME
 DEFAULT_INPUT_FILENAME = INPUT_FILENAME
 
+
 OUTPUT_FILE_PATH_OBSIDIAN_BASE = Path(
-    "/Users/flo/Work/Private/PKM/Octarine/Sandbox/Walk & Learn/Debug Output"
+    "/Users/flo/Work/Private/PKM/Obsidian/TheVault/WalkAndLearn/DebugSandbox"
 )
 
 
