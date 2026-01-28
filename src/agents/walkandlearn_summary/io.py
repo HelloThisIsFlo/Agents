@@ -25,12 +25,9 @@ comments:
 
 
 def read_file(file_path: Union[Path, str]) -> str:
-    try:
-        path = Path(file_path) if isinstance(file_path, str) else file_path
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError:
-        return f"File not found: {file_path}. Please set the correct file path in the configuration constants."
+    path = Path(file_path) if isinstance(file_path, str) else file_path
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
 
 
 def write_file(file_path: Union[Path, str], content: str) -> None:

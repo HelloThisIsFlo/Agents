@@ -144,9 +144,22 @@ def write_all_output_files(
             # Write combined result
             #
             # Replace [AHA_PLACEHOLDER] with emotional summary content
-            combined_content = technical_summary.replace(
-                "[AHA_PLACEHOLDER]", emotional_summary
-            )
+            if "[AHA_PLACEHOLDER]" in technical_summary:
+                combined_content = technical_summary.replace(
+                    "[AHA_PLACEHOLDER]", emotional_summary
+                )
+            else:
+                # Placeholder missing - prepend warning at the top with emotional summary
+                combined_content = (
+                    "## ❌ ❌ Missing AHA Placeholder Section ❌ ❌\n\n"
+                    + "> [!WARNING]\n"
+                    + "> The technical summary did not include the `[AHA_PLACEHOLDER]` marker.\n"
+                    + "> The emotional summary has been placed here at the top. Please manually move it to the correct location.\n\n"
+                    + "---\n\n"
+                    + emotional_summary
+                    + "\n\n---\n\n"
+                    + technical_summary
+                )
             write_file_with_frontmatter(
                 config_template,
                 now,
