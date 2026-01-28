@@ -11,4 +11,4 @@ EVALUATION_PROMPT = read_file(PROMPTS_DIR / "evaluation.md")
 
 if WIP_MODE:
     EMOTIONAL_SUMMARY_PROMPT = "This is a quick test. Generate a short 'emotional' summary of the conversation. Maximum 2 paragraphs."
-    TECHNICAL_SUMMARY_PROMPT = "This is a quick test. Generate a short 'technical' summary of the conversation. Maximum 2 paragraphs."
+    TECHNICAL_SUMMARY_PROMPT = "This is a quick test. Generate a short 'technical' summary of the conversation. Maximum 2 paragraphs. Include the placeholder [AHA_PLACEHOLDER] where the emotional summary section should go."

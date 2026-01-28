@@ -24,10 +24,10 @@ from src.agents.walkandlearn_summary.nodes.summary import (
 )
 from src.agents.walkandlearn_summary.nodes.evaluation import evaluate_summaries
 from src.agents.walkandlearn_summary.nodes.output import (
-    format_evaluation_file_content,
     format_evaluation_chat_output,
+    write_all_output_files,
 )
-from src.agents.walkandlearn_summary.io import read_file, write_file, get_frontmatter
+from src.agents.walkandlearn_summary.io import read_file
 from src.agents.walkandlearn_summary.prompts import (
     EMOTIONAL_SUMMARY_PROMPT,
     TECHNICAL_SUMMARY_PROMPT,
@@ -149,44 +149,24 @@ def build_graph():
         now = datetime.now()
         timestamp = now.strftime("%Y%m%d-%H%M%S")
 
-        # Create output folder with just the filename (no timestamp, since we have generated_at in frontmatter)
-        output_folder = OUTPUT_FILE_PATH_OBSIDIAN_BASE / filename_without_ext
+        output_folder = (
+            OUTPUT_FILE_PATH_OBSIDIAN_BASE / filename_without_ext / timestamp
+        )
         output_folder.mkdir(parents=True, exist_ok=True)
 
-        # Write all emotional summaries
-        emotional_summaries = state.get("emotional_summaries", [])
-        for i, summary in enumerate(emotional_summaries):
-            emotional_frontmatter = get_frontmatter(
-                CONFIG_TEMPLATE, now, input_filename, "emotional"
-            )
-            emotional_content = emotional_frontmatter + summary
-            emotional_file_path = output_folder / f"emotional_{i}__{timestamp}.md"
-            write_file(emotional_file_path, emotional_content)
-
-        # Write all technical summaries
-        technical_summaries = state.get("technical_summaries", [])
-        for i, summary in enumerate(technical_summaries):
-            technical_frontmatter = get_frontmatter(
-                CONFIG_TEMPLATE, now, input_filename, "technical"
-            )
-            technical_content = technical_frontmatter + summary
-            technical_file_path = output_folder / f"technical_{i}__{timestamp}.md"
-            write_file(technical_file_path, technical_content)
-
-        # Write evaluation file
-        evaluation_content = format_evaluation_file_content(
+        # Write all output files using the centralized function
+        write_all_output_files(
+            output_folder=output_folder,
+            input_filename=input_filename,
+            config_template=CONFIG_TEMPLATE,
+            now=now,
+            emotional_summaries=state.get("emotional_summaries", []),
+            technical_summaries=state.get("technical_summaries", []),
             emotional_best_idx=state.get("emotional_best_idx"),
-            emotional_reasoning=state.get("emotional_best_reasoning", "N/A"),
+            emotional_best_reasoning=state.get("emotional_best_reasoning", "N/A"),
             technical_best_idx=state.get("technical_best_idx"),
-            technical_reasoning=state.get("technical_best_reasoning", "N/A"),
+            technical_best_reasoning=state.get("technical_best_reasoning", "N/A"),
         )
-
-        evaluation_frontmatter = get_frontmatter(
-            CONFIG_TEMPLATE, now, input_filename, "evaluation"
-        )
-        evaluation_file_content = evaluation_frontmatter + evaluation_content
-        evaluation_file_path = output_folder / f"evaluation__{timestamp}.md"
-        write_file(evaluation_file_path, evaluation_file_content)
 
         # For chat output, only show evaluation results
         chat_output = format_evaluation_chat_output(

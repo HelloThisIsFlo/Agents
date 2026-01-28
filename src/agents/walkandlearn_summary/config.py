@@ -91,16 +91,18 @@ CONFIG_TEMPLATES = {
 # CONFIG
 ########################################################
 # CONFIG_TEMPLATE = "main"
+CONFIG_TEMPLATE = "gemini-fast-nowip"
 # CONFIG_TEMPLATE = "wip-gemini"
 # CONFIG_TEMPLATE = "main-gpt"
-CONFIG_TEMPLATE = "main-claude"
 # CONFIG_TEMPLATE = "main-gemini"
 
-EMOTIONAL_DISABLED = True
+# CONFIG_TEMPLATE = "main-claude"  # <- The MAIN one!
+
+EMOTIONAL_DISABLED = False
 TECHNICAL_DISABLED = False
 EVAL_DISABLED = False
 
-NUM_EMOTIONAL_ITERATIONS = 1
+NUM_EMOTIONAL_ITERATIONS = 3
 NUM_TECHNICAL_ITERATIONS = 3
 
 # INPUT_FILENAME = "input.md"
