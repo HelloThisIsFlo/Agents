@@ -3,58 +3,78 @@ from src.agents.walkandlearn_summary.models import get_model_by_name
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
-
+TEMPS = {
+    "emotional": 1.0,
+    "technical": 0.9,
+    "evaluation": 0.6,
+}
 MODELS = {
     "gpt-5.1": {
-        "emotional": get_model_by_name("GPT 5.1", temp=1.0),
-        "technical": get_model_by_name("GPT 5.1", temp=0.7),
-        "evaluation": get_model_by_name("GPT 5.1", temp=0.3),
+        "emotional": get_model_by_name("GPT 5.1", temp=TEMPS["emotional"]),
+        "technical": get_model_by_name("GPT 5.1", temp=TEMPS["technical"]),
+        "evaluation": get_model_by_name("GPT 5.1", temp=TEMPS["evaluation"]),
     },
     "gpt-5.1-chat": {
-        "emotional": get_model_by_name("GPT 5.1-chat", temp=1.0),
-        "technical": get_model_by_name("GPT 5.1-chat", temp=0.7),
-        "evaluation": get_model_by_name("GPT 5.1-chat", temp=0.3),
+        "emotional": get_model_by_name("GPT 5.1-chat", temp=TEMPS["emotional"]),
+        "technical": get_model_by_name("GPT 5.1-chat", temp=TEMPS["technical"]),
+        "evaluation": get_model_by_name("GPT 5.1-chat", temp=TEMPS["evaluation"]),
+    },
+    "gpt-5.2": {
+        "emotional": get_model_by_name("GPT 5.2", temp=TEMPS["emotional"]),
+        "technical": get_model_by_name("GPT 5.2", temp=TEMPS["technical"]),
+        "evaluation": get_model_by_name("GPT 5.2", temp=TEMPS["evaluation"]),
+    },
+    "gpt-5.2-chat": {
+        "emotional": get_model_by_name("GPT 5.2-chat", temp=TEMPS["emotional"]),
+        "technical": get_model_by_name("GPT 5.2-chat", temp=TEMPS["technical"]),
+        "evaluation": get_model_by_name("GPT 5.2-chat", temp=TEMPS["evaluation"]),
     },
     "claude-sonnet-4.5": {
-        "emotional": get_model_by_name("Sonnet 4.5", temp=1.0),
-        "technical": get_model_by_name("Sonnet 4.5", temp=0.7),
-        "evaluation": get_model_by_name("Sonnet 4.5", temp=0.3),
+        "emotional": get_model_by_name("Sonnet 4.5", temp=TEMPS["emotional"]),
+        "technical": get_model_by_name("Sonnet 4.5", temp=TEMPS["technical"]),
+        "evaluation": get_model_by_name("Sonnet 4.5", temp=TEMPS["evaluation"]),
     },
     "gemini-pro": {
-        "emotional": get_model_by_name("Gemini 2.5 Pro", temp=1.0),
-        "technical": get_model_by_name("Gemini 2.5 Pro", temp=0.7),
-        "evaluation": get_model_by_name("Gemini 2.5 Pro", temp=0.3),
+        "emotional": get_model_by_name("Gemini 2.5 Pro", temp=TEMPS["emotional"]),
+        "technical": get_model_by_name("Gemini 2.5 Pro", temp=TEMPS["technical"]),
+        "evaluation": get_model_by_name("Gemini 2.5 Pro", temp=TEMPS["evaluation"]),
     },
     "gpt-nano": {
-        "emotional": get_model_by_name("GPT 5-nano", temp=1.0),
-        "technical": get_model_by_name("GPT 5-nano", temp=0.7),
-        "evaluation": get_model_by_name("GPT 5-nano", temp=0.3),
+        "emotional": get_model_by_name("GPT 5-nano", temp=TEMPS["emotional"]),
+        "technical": get_model_by_name("GPT 5-nano", temp=TEMPS["technical"]),
+        "evaluation": get_model_by_name("GPT 5-nano", temp=TEMPS["evaluation"]),
     },
     "gemini-nano": {
-        "emotional": get_model_by_name("Gemini 2.5 Flash Lite", temp=1.0),
-        "technical": get_model_by_name("Gemini 2.5 Flash Lite", temp=0.7),
-        "evaluation": get_model_by_name("Gemini 2.5 Flash Lite", temp=0.3),
+        "emotional": get_model_by_name(
+            "Gemini 2.5 Flash Lite", temp=TEMPS["emotional"]
+        ),
+        "technical": get_model_by_name(
+            "Gemini 2.5 Flash Lite", temp=TEMPS["technical"]
+        ),
+        "evaluation": get_model_by_name(
+            "Gemini 2.5 Flash Lite", temp=TEMPS["evaluation"]
+        ),
     },
     "thinking": {
-        "emotional": get_model_by_name("Sonnet 4.5", temp=1.0),
-        "technical": get_model_by_name("GPT 5-nano", temp=0.7),
-        "evaluation": get_model_by_name("Sonnet 4.5", temp=0.3),
+        "emotional": get_model_by_name("Sonnet 4.5", temp=TEMPS["emotional"]),
+        "technical": get_model_by_name("GPT 5-nano", temp=TEMPS["technical"]),
+        "evaluation": get_model_by_name("Sonnet 4.5", temp=TEMPS["evaluation"]),
     },
     "wip-thinking": {
-        "emotional": get_model_by_name("GPT 5-nano", temp=1.0),
-        "technical": get_model_by_name("GPT 5-nano", temp=0.7),
-        "evaluation": get_model_by_name("GPT 5-nano", temp=0.3),
+        "emotional": get_model_by_name("GPT 5-nano", temp=TEMPS["emotional"]),
+        "technical": get_model_by_name("GPT 5-nano", temp=TEMPS["technical"]),
+        "evaluation": get_model_by_name("GPT 5-nano", temp=TEMPS["evaluation"]),
     },
 }
 
 CONFIG_TEMPLATES = {
     "main-gpt": {
         "wip": False,
-        "models": MODELS["gpt-5.1"],
+        "models": MODELS["gpt-5.2"],
     },
     "main-gpt-chat": {
         "wip": False,
-        "models": MODELS["gpt-5.1-chat"],
+        "models": MODELS["gpt-5.2-chat"],
     },
     "main-claude": {
         "wip": False,
@@ -90,13 +110,13 @@ CONFIG_TEMPLATES = {
 ########################################################
 # CONFIG
 ########################################################
-# CONFIG_TEMPLATE = "main"
-CONFIG_TEMPLATE = "gemini-fast-nowip"
+# CONFIG_TEMPLATE = "gemini-fast-nowip"
 # CONFIG_TEMPLATE = "wip-gemini"
 # CONFIG_TEMPLATE = "main-gpt"
+# CONFIG_TEMPLATE = "main-gpt-chat"
 # CONFIG_TEMPLATE = "main-gemini"
 
-# CONFIG_TEMPLATE = "main-claude"  # <- The MAIN one!
+CONFIG_TEMPLATE = "main-claude"  # <- The MAIN one!
 
 EMOTIONAL_DISABLED = False
 TECHNICAL_DISABLED = False
@@ -107,6 +127,7 @@ NUM_TECHNICAL_ITERATIONS = 3
 
 # INPUT_FILENAME = "input.md"
 INPUT_FILENAME = "input-shap.md"
+# INPUT_FILENAME = "input-norms.md"
 # INPUT_FILENAME = "input-hessian.md"
 
 

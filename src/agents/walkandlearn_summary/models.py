@@ -1,4 +1,4 @@
-from re import M
+import logging
 import pandas as pd
 from langchain.chat_models import init_chat_model
 
@@ -44,6 +44,22 @@ MODELS_DF = pd.DataFrame(
         (
             "GPT 5.1-chat",
             "gpt-5.1-chat-latest",
+            "OpenAI",
+            "main",
+            "openai",
+            1.0,
+        ),
+        (
+            "GPT 5.2",
+            "gpt-5.2",
+            "OpenAI",
+            "main",
+            "openai",
+            1.0,
+        ),
+        (
+            "GPT 5.2-chat",
+            "gpt-5.2-chat-latest",
             "OpenAI",
             "main",
             "openai",
@@ -150,12 +166,30 @@ def get_model_by_name(name: str, temp: float | None = None):
     try:
         row = MODELS_DF[MODELS_DF["friendly_name"] == name].iloc[0]
         slug = row["slug"]
-        provider = row["langchain_provider"]
+        langchain_provider = row["langchain_provider"]
 
         if temp is None:
             temp = row["temperature"]
 
-        return init_chat_model(model=slug, model_provider=provider, temperature=temp)
+        # Configure retry and timeout settings, especially for Anthropic
+        kwargs = {
+            "model": slug,
+            "model_provider": langchain_provider,
+            "temperature": temp,
+        }
+
+        if langchain_provider == "anthropic":
+            # Anthropic-specific settings for rate limiting
+            logging.info(
+                "Using Anthropic-specific settings for rate limiting | model: %s", name
+            )
+            kwargs.update(
+                {
+                    "max_retries": 10,  # We're hitting the token/min limit => So, quick hack to keep retrying until it works
+                }
+            )
+
+        return init_chat_model(**kwargs)
     except IndexError:
         raise ValueError(f"Model {name} not found")
 
