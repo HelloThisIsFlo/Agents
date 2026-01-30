@@ -113,7 +113,11 @@ This is a precise documentation of concepts, formulas, and processes covered - o
     ```
   - Do **not** format math symbol as unicode, always use `$` delimiters and plain text.
 - Top-level summaries stay concise; details go in expandable sections
-- Feel free to use **mermaid** to represent information as graphs, but only if a graph would help understanding
+- Use **mermaid** to represent information as graphs, but only if it would help understanding.
+  - Here are some great uses of mermaid (non exhaustive, feel free to experiment):
+    - Representing relationships in the 'Conceptual Relationships' section.
+    - Using a Flowchart to represent a decision tree (what to choose, debugging process, thinking process, etc ...)
+    - Summarizing the whole conversation as a mindmap style graph
 - Use the following format for collapsible sections: (replace `TITLE` with the title of the collapsible section)
   ```
   > [!info]- **TITLE**
