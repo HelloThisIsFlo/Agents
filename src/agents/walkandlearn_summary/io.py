@@ -12,12 +12,13 @@ def get_frontmatter(
     generated_at = dt.strftime("%Y-%m-%dT%H:%M:%S")
 
     return f"""---
-locked: true
-config_template: {config_template}
+date: 2026-01-01
+teaser: "PLACEHOLDER"
+banner: "[[placeholder.png]]"
 generated_at: {generated_at}
-input_file: {input_filename}
-summary_type: {summary_type}
-comments:
+review-config_template: {config_template}
+review-input_file: {input_filename}
+review-summary_type: {summary_type}
 
 ---
 

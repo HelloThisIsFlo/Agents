@@ -126,8 +126,8 @@ NUM_EMOTIONAL_ITERATIONS = 3
 NUM_TECHNICAL_ITERATIONS = 3
 
 # INPUT_FILENAME = "input.md"
-INPUT_FILENAME = "input-shap.md"
-# INPUT_FILENAME = "input-norms.md"
+# INPUT_FILENAME = "nput-shap.md"
+INPUT_FILENAME = "input-norm0.md"
 # INPUT_FILENAME = "input-hessian.md"
 
 
