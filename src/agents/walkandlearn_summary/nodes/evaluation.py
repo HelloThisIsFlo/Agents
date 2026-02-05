@@ -1,6 +1,7 @@
 """Evaluation logic for summary generation."""
 
 import re
+from tkinter import N
 from typing import Optional, Tuple
 from langchain_core.messages import HumanMessage
 
@@ -28,22 +29,29 @@ def parse_evaluation_result(evaluation_result: str) -> Tuple[Optional[int], str]
     Returns:
         Tuple of (best_summary_index, reasoning)
     """
+
+    if evaluation_result is None:
+        return None, "Empty evaluation result"
+
     best_idx = None
-    reasoning = evaluation_result
+    evaluation_result = str(evaluation_result)
 
-    # Try to extract "Best summary: X" from the response
-    match = re.search(r"Best summary:\s*(\d+)", evaluation_result, re.IGNORECASE)
-    if match:
-        best_idx = int(match.group(1))
+    try:
+        # Try to extract "Best summary: X" from the response
+        match = re.search(r"Best summary:\s*(\d+)", evaluation_result, re.IGNORECASE)
+        if match:
+            best_idx = int(match.group(1))
 
-    # Try to extract reasoning
-    reasoning_match = re.search(
-        r"Reasoning:\s*(.+)", evaluation_result, re.IGNORECASE | re.DOTALL
-    )
-    if reasoning_match:
-        reasoning = reasoning_match.group(1).strip()
+        # Try to extract reasoning
+        reasoning_match = re.search(
+            r"Reasoning:\s*(.+)", evaluation_result, re.IGNORECASE | re.DOTALL
+        )
+        if reasoning_match:
+            reasoning = reasoning_match.group(1).strip()
 
-    return best_idx, reasoning
+        return best_idx, reasoning
+    except Exception:
+        return best_idx, evaluation_result if evaluation_result else "Parse error"
 
 
 def evaluate_summaries(

@@ -85,6 +85,11 @@ def write_file_with_frontmatter(
     output_path: Path,
 ) -> None:
 
+    # Ensure summary is a string (defensive check)
+    if isinstance(summary, list):
+        summary = "\n".join(str(item) for item in summary)
+    summary = str(summary)
+
     frontmatter = get_frontmatter(config_template, now, input_filename, summary_type)
     content = frontmatter + summary
     write_file(output_path, content)

@@ -121,6 +121,14 @@ MODELS_DF = pd.DataFrame(
             "google_vertexai" if USING_GOOGLE_VERTEXAI else "google_genai",
             1.0,
         ),
+        (
+            "Gemini 3 Pro",
+            "gemini-3-pro-preview",
+            "Google",
+            "main",
+            "google_vertexai" if USING_GOOGLE_VERTEXAI else "google_genai",
+            1.0,
+        ),
     ],
     columns=[
         "friendly_name",

@@ -4,8 +4,8 @@ from src.agents.walkandlearn_summary.models import get_model_by_name
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
 TEMPS = {
-    "emotional": 1.0,
-    "technical": 0.9,
+    "emotional": 0.9,
+    "technical": 0.7,
     "evaluation": 0.6,
 }
 MODELS = {
@@ -38,6 +38,11 @@ MODELS = {
         "emotional": get_model_by_name("Gemini 2.5 Pro", temp=TEMPS["emotional"]),
         "technical": get_model_by_name("Gemini 2.5 Pro", temp=TEMPS["technical"]),
         "evaluation": get_model_by_name("Gemini 2.5 Pro", temp=TEMPS["evaluation"]),
+    },
+    "gemini-3-pro": {
+        "emotional": get_model_by_name("Gemini 3 Pro", temp=TEMPS["emotional"]),
+        "technical": get_model_by_name("Gemini 3 Pro", temp=TEMPS["technical"]),
+        "evaluation": get_model_by_name("Gemini 3 Pro", temp=TEMPS["evaluation"]),
     },
     "gpt-nano": {
         "emotional": get_model_by_name("GPT 5-nano", temp=TEMPS["emotional"]),
@@ -82,7 +87,7 @@ CONFIG_TEMPLATES = {
     },
     "main-gemini": {
         "wip": False,
-        "models": MODELS["gemini-pro"],
+        "models": MODELS["gemini-3-pro"],
     },
     "thinking": {
         "wip": False,
@@ -117,6 +122,7 @@ CONFIG_TEMPLATES = {
 # CONFIG_TEMPLATE = "main-gemini"
 
 CONFIG_TEMPLATE = "main-claude"  # <- The MAIN one!
+# CONFIG_TEMPLATE = "main-gemini"
 
 EMOTIONAL_DISABLED = False
 TECHNICAL_DISABLED = False
@@ -127,7 +133,10 @@ NUM_TECHNICAL_ITERATIONS = 3
 
 # INPUT_FILENAME = "input.md"
 # INPUT_FILENAME = "nput-shap.md"
-INPUT_FILENAME = "input-norm0.md"
+# INPUT_FILENAME = "input-norm1.md"
+INPUT_FILENAME = "input-march26.md"
+# INPUT_FILENAME = "input-norm1.md"
+# INPUT_FILENAME = "input-cluster.md"
 # INPUT_FILENAME = "input-hessian.md"
 
 

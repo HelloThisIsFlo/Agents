@@ -22,4 +22,20 @@ def generate_summary_with_agent(agent, conversation: str) -> str:
             ]
         }
     )
-    return result["messages"][-1].content
+
+    content = result["messages"][-1].content
+
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+
+        def get_text(block):
+            if isinstance(block, dict) and "text" in block:
+                return block["text"]
+            if isinstance(block, str):
+                return block
+            return ""
+
+        return "\n".join(get_text(block) for block in content)
+
+    raise ValueError(f"Unknown content type: {type(content)}")
