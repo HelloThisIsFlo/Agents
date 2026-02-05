@@ -98,10 +98,10 @@ This is a precise documentation of concepts, formulas, and processes covered - o
   - Do NOT include a **h1** header for the document title
     - **h1** headers should be reserved for the **Required Sections**
 - Use Emojis for liberally:
-  - _ALWAYS START each **h1** and _each **h2**_ headers with an emoji!
+  - _ALWAYS START each **h1**, **h2**, and **h3**_ headers with an emoji!
     - This makes the TOC easily scannable
-    - Do the same for lower headings (h3, h4, ...) _only if_ it makes sense
-    - DO NOT WRITE h1 or h2 headers without starting emoji!!
+    - Do the same for lower headings (h4, h5, ...) _only if_ it makes sense
+    - DO NOT WRITE h1, h2, h3 headers without starting emoji!!
   - Use emojis for visual hierarchy (📌, ✅, 🔍, ⚠️, ...)
 - Format math in Obsidian LaTeX:
   - For inline math equations / symbols, use: `$...$`

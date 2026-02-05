@@ -257,6 +257,11 @@ Does the Aha Moment ...
 
 #### Style
 - Format each Isolated Moment / Thinking Arc as explained above
+  - Make sure to include all the key elemnts:
+    - Category
+    - "Summary" callout
+    - "Why it mattered!" callout
+    - ... (see format sections above for more details)
 - Use --- horizontal breaks between Aha-Moments
 - Use **bold** formatting within each "Aha moment" to enhance readability 
 - Use **lots of emoji** within each "Aha moment", to attract the attention on breakthroughs
@@ -278,6 +283,15 @@ Does the Aha Moment ...
     > [!SUCCESS] **Why it mattered!**
     > ...
     ```
+- If you use math, format it in Obsidian LaTeX:
+  - For inline math equations / symbols, use: `$...$`
+  - For block math equations, use: 
+    ```
+    $$$
+    ...
+    $$$
+    ```
+  - Do **not** format math symbol as unicode, always use `$` delimiters and plain text.
 
 
 #### Guidelines
