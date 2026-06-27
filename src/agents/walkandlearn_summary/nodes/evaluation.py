@@ -1,8 +1,8 @@
 """Evaluation logic for summary generation."""
 
 import re
-from tkinter import N
 from typing import Optional, Tuple
+
 from langchain_core.messages import HumanMessage
 
 

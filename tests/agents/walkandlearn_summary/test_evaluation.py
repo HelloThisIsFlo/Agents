@@ -1,13 +1,13 @@
 """Tests for evaluation functions."""
 
-import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
+
 from langchain_core.messages import AIMessage
 
 from src.agents.walkandlearn_summary.nodes.evaluation import (
+    evaluate_summaries,
     format_summaries_for_evaluation,
     parse_evaluation_result,
-    evaluate_summaries,
 )
 
 

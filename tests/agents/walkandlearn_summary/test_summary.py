@@ -1,7 +1,7 @@
 """Tests for summary generation functions."""
 
-import pytest
 from unittest.mock import Mock
+
 from langchain_core.messages import AIMessage, HumanMessage
 
 from src.agents.walkandlearn_summary.nodes.summary import (
