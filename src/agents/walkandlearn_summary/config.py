@@ -4,7 +4,7 @@ from src.agents.walkandlearn_summary.models import get_model_by_name
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
 TEMPS = {
-    "emotional": 0.9,
+    "emotional": 0.8,
     "technical": 0.7,
     "evaluation": 0.6,
 }
