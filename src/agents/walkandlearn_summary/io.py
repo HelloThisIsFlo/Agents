@@ -16,6 +16,7 @@ date: 2026-01-01
 teaser: "PLACEHOLDER"
 banner: "[[placeholder.png]]"
 generated_at: {generated_at}
+WL Type: Walk & Learn
 review-config_template: {config_template}
 review-input_file: {input_filename}
 review-summary_type: {summary_type}
